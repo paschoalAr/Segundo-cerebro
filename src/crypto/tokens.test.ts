@@ -23,4 +23,11 @@ describe('tokens', () => {
     const [iv, tag, data] = enc.split(':');
     expect(() => decrypt(`${iv}:${tag}:${data.slice(0, -2)}AA`, key)).toThrow();
   });
+
+  it('rejeita tag de autenticação truncada', () => {
+    const enc = encrypt('segredo', key);
+    const [iv, tag, data] = enc.split(':');
+    const shortTag = Buffer.from(tag, 'base64').subarray(0, 4).toString('base64');
+    expect(() => decrypt(`${iv}:${shortTag}:${data}`, key)).toThrow();
+  });
 });
