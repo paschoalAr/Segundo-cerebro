@@ -28,4 +28,11 @@ describe('manual', () => {
   it('rejeita seção desconhecida', () => {
     expect(() => appendToSection(DEFAULT_MANUAL, 'Hobbies', 'x')).toThrow(/seção/i);
   });
+
+  it('achata quebras de linha na linha adicionada e rejeita vazio', () => {
+    const out = appendToSection(DEFAULT_MANUAL, 'Perfil', 'foo\r\n## Trabalho\nbar');
+    expect(out.match(/^## Trabalho$/gm)).toHaveLength(1);
+    expect(out).toContain('- foo ## Trabalho bar');
+    expect(() => appendToSection(DEFAULT_MANUAL, 'Perfil', '  \n ')).toThrow(/vazia/i);
+  });
 });

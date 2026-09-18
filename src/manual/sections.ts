@@ -19,12 +19,15 @@ function isSection(s: string): s is ManualSection {
 export function appendToSection(content: string, section: string, line: string): string {
   if (!isSection(section)) throw new Error(`Seção desconhecida: ${section}`);
 
+  const text = line.replace(/\s*\r?\n\s*/g, ' ').trim();
+  if (!text) throw new Error('Linha vazia');
+
   const header = `## ${section}`;
   const lines = content.split('\n');
   const start = lines.findIndex((l) => l.trim() === header);
 
   if (start === -1) {
-    return content.replace(/\s*$/, '') + `\n\n${header}\n\n- ${line}\n`;
+    return content.replace(/\s*$/, '') + `\n\n${header}\n\n- ${text}\n`;
   }
 
   let end = lines.length;
@@ -40,7 +43,7 @@ export function appendToSection(content: string, section: string, line: string):
   while (insertAt > start + 1 && lines[insertAt - 1].trim() === '') insertAt--;
 
   const hasBody = insertAt > start + 1;
-  const bullet = hasBody ? [`- ${line}`] : ['', `- ${line}`];
+  const bullet = hasBody ? [`- ${text}`] : ['', `- ${text}`];
   lines.splice(insertAt, 0, ...bullet);
 
   return lines.join('\n');
