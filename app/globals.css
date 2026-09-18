@@ -1,0 +1,99 @@
+:root {
+  --bg: #ffffff;
+  --fg: #111111;
+  --muted: #6b6b6b;
+  --line: #d9d9d9;
+  --soft: #f3f3f3;
+
+  /* Cor só nos blocos (spec §5) */
+  --block-real: #3a3a3a;
+  --block-study: #2f6fed;
+  --block-task: #e8862a;
+  --block-travel: #7d4fd1;
+  --block-buffer: #bdbdbd;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+a { color: inherit; }
+
+button, input, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: var(--fg);
+  color: var(--bg);
+  border: 1px solid var(--fg);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+textarea, input[type="text"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  overflow-x: auto;
+}
+
+.nav a {
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.nav a[aria-current="page"] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.nav .spacer { flex: 1; }
+
+.muted { color: var(--muted); }
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
