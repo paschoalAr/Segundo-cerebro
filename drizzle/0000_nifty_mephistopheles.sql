@@ -115,4 +115,5 @@ ALTER TABLE "plan_blocks" ADD CONSTRAINT "plan_blocks_fact_id_facts_id_fk" FOREI
 ALTER TABLE "plan_blocks" ADD CONSTRAINT "plan_blocks_created_run_id_plan_runs_id_fk" FOREIGN KEY ("created_run_id") REFERENCES "public"."plan_runs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "plan_blocks" ADD CONSTRAINT "plan_blocks_updated_run_id_plan_runs_id_fk" FOREIGN KEY ("updated_run_id") REFERENCES "public"."plan_runs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "questions" ADD CONSTRAINT "questions_run_id_plan_runs_id_fk" FOREIGN KEY ("run_id") REFERENCES "public"."plan_runs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "facts_source_ref_idx" ON "facts" USING btree ("source","source_ref");
+CREATE UNIQUE INDEX "facts_source_ref_idx" ON "facts" USING btree ("source","source_ref");--> statement-breakpoint
+CREATE UNIQUE INDEX "plan_blocks_gcal_event_id_idx" ON "plan_blocks" USING btree ("gcal_event_id") WHERE "plan_blocks"."gcal_event_id" is not null;

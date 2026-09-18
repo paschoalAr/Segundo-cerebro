@@ -1,5 +1,5 @@
 {
-  "id": "aea7fd4f-8a18-47d6-bc0e-0eb9d59c7ce9",
+  "id": "73568a5f-058c-40f6-9e9c-918bb59562d9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -457,7 +457,24 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "plan_blocks_gcal_event_id_idx": {
+          "name": "plan_blocks_gcal_event_id_idx",
+          "columns": [
+            {
+              "expression": "gcal_event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"plan_blocks\".\"gcal_event_id\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "plan_blocks_fact_id_facts_id_fk": {
           "name": "plan_blocks_fact_id_facts_id_fk",

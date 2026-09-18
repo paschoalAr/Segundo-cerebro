@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
@@ -60,20 +61,28 @@ export const facts = pgTable(
   (t) => [uniqueIndex('facts_source_ref_idx').on(t.source, t.sourceRef)],
 );
 
-export const planBlocks = pgTable('plan_blocks', {
-  id: serial('id').primaryKey(),
-  factId: integer('fact_id').references(() => facts.id, { onDelete: 'set null' }),
-  title: text('title').notNull(),
-  start: timestamp('start', { withTimezone: true }).notNull(),
-  end: timestamp('end', { withTimezone: true }).notNull(),
-  kind: blockKind('kind').notNull(),
-  gcalEventId: text('gcal_event_id'),
-  status: blockStatus('status').notNull().default('planned'),
-  reason: text('reason').notNull(),
-  prep: jsonb('prep').$type<Record<string, unknown>>(),
-  createdRunId: integer('created_run_id').references(() => planRuns.id),
-  updatedRunId: integer('updated_run_id').references(() => planRuns.id),
-});
+export const planBlocks = pgTable(
+  'plan_blocks',
+  {
+    id: serial('id').primaryKey(),
+    factId: integer('fact_id').references(() => facts.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    start: timestamp('start', { withTimezone: true }).notNull(),
+    end: timestamp('end', { withTimezone: true }).notNull(),
+    kind: blockKind('kind').notNull(),
+    gcalEventId: text('gcal_event_id'),
+    status: blockStatus('status').notNull().default('planned'),
+    reason: text('reason').notNull(),
+    prep: jsonb('prep').$type<Record<string, unknown>>(),
+    createdRunId: integer('created_run_id').references(() => planRuns.id),
+    updatedRunId: integer('updated_run_id').references(() => planRuns.id),
+  },
+  (t) => [
+    uniqueIndex('plan_blocks_gcal_event_id_idx')
+      .on(t.gcalEventId)
+      .where(sql`${t.gcalEventId} is not null`),
+  ],
+);
 
 export const questions = pgTable('questions', {
   id: serial('id').primaryKey(),
