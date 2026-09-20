@@ -1,38 +1,39 @@
 # Plano 1 — Fundação — ESTADO
 
-**Atualizado:** 2026-09-20 11:00
-**Branch:** `plano-1-fundacao` (HEAD `479403a`), ainda não mergeada em `main`, sem remote.
+**Atualizado:** 2026-09-20 14:20
+**Branch:** `plano-1-fundacao` (HEAD `17e4927`), ainda não mergeada em `main`, sem remote.
 **Método:** superpowers:subagent-driven-development (implementador → revisão de spec → revisão de qualidade por task).
-**Testes:** `npm test` → 18/18 passando · `npm run typecheck` limpo.
+**Testes:** `npm test` → 18/18 passando · `npm run typecheck` limpo · `npm run build` completo passa (com `.env` real).
+**Neon:** projeto `holy-lab-38634353` criado por fora (dashboard), connection string no `.env` local. Migração aplicada, `knowledge` populada (22 docs). `.env` NÃO tem `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` ainda.
 
 ## Tasks
 
 | # | Task | Estado | Commit | Observações |
 |---|---|---|---|---|
 | 1 | Scaffold | ✅ | `4182408` | 2 revisões limpas |
-| 2 | Schema do banco | ✅ código · ⏳ migração | `b03e860`, `6487929` | Revisão adicionou índice único parcial em `plan_blocks.gcal_event_id`. **Falta:** `npm run db:migrate` (precisa do Neon — ver "Bloqueios") |
+| 2 | Schema do banco | ✅ | `b03e860`, `6487929` | Revisão adicionou índice único parcial em `plan_blocks.gcal_event_id`. Migração aplicada no Neon real em 20/09 (`npm run db:migrate` ok, 10 tabelas + 10 enums) |
 | 3 | Cifra AES-GCM | ✅ | `b801a1c`, `6ab6f16` | Revisão adicionou `authTagLength: 16` + teste de tag truncada (5 testes) |
 | 4 | Allowlist de e-mail | ✅ | `a8d227a` | 3 testes |
 | 6 | Domínio do Manual | ✅ | `6d23d7c`, `2522b7a` | Revisão: achatar `\n` na linha, CRLF→LF em `saveManual`, `onConflictDoNothing` no seed (6 testes) |
-| 7 | Importador knowledge | ✅ código e revisão · ⏳ execução | `e8e931d` | Revisão de spec + qualidade feitas em 20/09 (aprovado, sem issues). Falta rodar `npm run sync-knowledge` contra o banco real (bloqueado por Neon) |
-| 5 | Login Google (Auth.js) | ✅ código e revisão · ⏳ teste manual | `7643264` | Revisão de spec + qualidade feitas em 20/09 (aprovado). Reviewer sugeriu (não bloqueante): try/catch + log em volta de `saveGoogleRefreshToken` no callback `signIn`, e logar quando `account.refresh_token` vier ausente. Falta teste manual do fluxo OAuth (precisa do `.env`) |
+| 7 | Importador knowledge | ✅ | `e8e931d` | Revisão de spec + qualidade feitas em 20/09 (aprovado, sem issues). `npm run sync-knowledge` rodado contra o banco real em 20/09: 22 docs importados, idempotente (rodado 2x, mesmo resultado). Achou e corrigiu 1 bug real: frontmatter YAML sem aspas em `emissor_nf_kay_estado.md` (description com `:` no meio do texto) quebrava o parser — corrigido na memória |
+| 5 | Login Google (Auth.js) | ✅ código e revisão · ⏳ teste manual OAuth | `7643264` | Revisão de spec + qualidade feitas em 20/09 (aprovado). Reviewer sugeriu (não bloqueante): try/catch + log em volta de `saveGoogleRefreshToken` no callback `signIn`, e logar quando `account.refresh_token` vier ausente. Testado no navegador em 20/09: `/`, `/inbox`, `/manual` redirecionam certo pra `/login?next=...` sem sessão; `/login?error=AccessDenied` mostra a mensagem certa. **Falta só:** testar o fluxo OAuth completo (precisa de `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` no `.env`) |
 | 8 | Layout + nav 4 telas | ✅ | `49287db` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
 | 9 | Tela Inbox | ✅ | `b0b8479` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
 | 10 | Tela Manual | ✅ | `479403a` | Revisão de spec + qualidade feitas em 20/09 (aprovado). Reviewer notou (não bloqueante, sem impacto hoje pois `planRuns` está vazia): cor do erro em `page.tsx` usa `var(--fg)` em vez de uma cor de erro de verdade; sem estado "salvando..." no botão Salvar |
-| 11 | Deploy Vercel | ⬜ | — | Bloqueado: precisa do Neon + `.env` local primeiro (Tasks 2/5/7 de "execução"/"teste manual"), depois projeto Vercel |
+| 11 | Deploy Vercel | ⬜ | — | Falta só `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` (Google Cloud) pra testar login completo local, depois criar projeto Vercel |
 
-**Todo o código do Plano 1 está escrito.** As únicas pendências são passos manuais do Arthur (Neon, Google Cloud, `.env`) e o que depende deles (migração, sync-knowledge, teste manual de login, deploy).
+**Todo o código do Plano 1 está escrito, migrado e rodando localmente.** `npm run build` completo passa. Única pendência real: Google Cloud OAuth client (Google Cloud, item 2 de "Bloqueios") — depois disso é testar o login de verdade e partir pro deploy (Task 11).
 
 ## Bloqueios (passos manuais do Arthur)
 
-1. **Neon:** criar projeto `segundo-cerebro` em https://console.neon.tech, copiar connection string *pooled*.
-2. **Google Cloud:** projeto `segundo-cerebro` → ativar Google Calendar API → tela de consentimento (Externo, Arthur como usuário de teste) → credencial OAuth tipo Web com redirect `http://localhost:3000/api/auth/callback/google` → Client ID + Secret.
-3. Criar `C:\Users\arthu\segundo-cerebro\.env` a partir de `.env.example` com `DATABASE_URL`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`. `AUTH_SECRET` e `TOKEN_ENCRYPTION_KEY`: gerar com `openssl rand -base64 32` (dois valores distintos).
+1. ~~**Neon:** criar projeto, copiar connection string pooled.~~ ✅ Feito em 20/09 (projeto `holy-lab-38634353`, `.env` com `DATABASE_URL`, migração aplicada, knowledge sincronizada).
+2. **Google Cloud:** projeto `segundo-cerebro` → ativar Google Calendar API → tela de consentimento (Externo, Arthur como usuário de teste) → credencial OAuth tipo Web com redirect `http://localhost:3000/api/auth/callback/google` (dev roda na porta 3001 neste ambiente via `.claude/launch.json`, mas o redirect URI do Google fica em `localhost:3000` mesmo — ajustar a porta do dev local se for testar, ou registrar as duas portas no Google Cloud) → Client ID + Secret.
+3. ~~Criar `.env`, gerar `AUTH_SECRET`/`TOKEN_ENCRYPTION_KEY`.~~ ✅ Feito em 20/09. Só faltam `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` no `.env` depois do passo 2.
 
 ## Próximos passos, em ordem
 
-1. **Arthur resolve os 3 bloqueios acima** (Neon, Google Cloud, `.env`) — nada mais de código pode avançar sem isso.
-2. Com `.env` pronto: `npm run db:migrate`, `npm run sync-knowledge`, `npm run dev` e os testes manuais das Tasks 5 (login Google), 8 (nav), 9 (Inbox), 10 (Manual) — todos no navegador local.
+1. **Arthur resolve o bloqueio 2 acima** (Google Cloud OAuth client) e cola `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` no `.env`.
+2. Teste manual do fluxo OAuth completo (Task 5, step 7 do plano): login com o e-mail permitido, checar `oauth_tokens` populada; login com outro e-mail, checar `AccessDenied`.
 3. Task 11 (Vercel: `npx vercel link`, env vars no dashboard, redirect de produção no Google, `vercel --prod`, criar repo GitHub privado + push).
 4. Revisão final do branch → superpowers:finishing-a-development-branch → merge em `main`.
 5. Depois de tudo pronto: Plano 2 — Fontes (client Google Calendar com refresh, calendário "Cérebro", coletores Moodle/GCal/Outlook → `facts`, tela Semana com eventos reais).
