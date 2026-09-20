@@ -16,8 +16,8 @@
 | 6 | Domínio do Manual | ✅ | `6d23d7c`, `2522b7a` | Revisão: achatar `\n` na linha, CRLF→LF em `saveManual`, `onConflictDoNothing` no seed (6 testes) |
 | 7 | Importador knowledge | ✅ código e revisão · ⏳ execução | `e8e931d` | Revisão de spec + qualidade feitas em 20/09 (aprovado, sem issues bloqueantes). Falta rodar `npm run sync-knowledge` contra o banco real (bloqueado por Neon) |
 | 5 | Login Google (Auth.js) | ✅ código e revisão · ⏳ teste manual | `7643264` | Revisão de spec + qualidade feitas em 20/09 (aprovado). Reviewer sugeriu (não bloqueante): try/catch + log em volta de `saveGoogleRefreshToken` no callback `signIn`, e logar quando `account.refresh_token` vier ausente. Falta teste manual do fluxo OAuth (precisa do `.env`) |
-| 8 | Layout + nav 4 telas | ⬜ | — | Depende do `auth.ts` da Task 5 (`signOut`) — Task 5 pronta |
-| 9 | Tela Inbox | ⬜ | — | |
+| 8 | Layout + nav 4 telas | ✅ | `49287db` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
+| 9 | Tela Inbox | ✅ | `b0b8479` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
 | 10 | Tela Manual | ⬜ | — | |
 | 11 | Deploy Vercel | ⬜ | — | |
 
