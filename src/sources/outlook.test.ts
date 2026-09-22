@@ -26,6 +26,18 @@ describe('mapIcsToFacts', () => {
     expect(facts).toHaveLength(2);
 
     expect(facts[0]).toMatchObject({ title: 'Reunião de time', source: 'outlook', sourceRef: 'evt-123@outlook.com', allDay: false });
+    // vitest.config.ts fixa TZ=America/Sao_Paulo (UTC-3): 17:00Z vira 14:00 local.
+    expect(facts[0].date.getHours()).toBe(14);
+    expect(facts[0].endDate?.getHours()).toBe(15);
+
     expect(facts[1]).toMatchObject({ title: 'Feriado', source: 'outlook', sourceRef: 'evt-456@outlook.com', allDay: true });
+    expect(facts[1].date.getFullYear()).toBe(2026);
+    expect(facts[1].date.getMonth()).toBe(8);
+    expect(facts[1].date.getDate()).toBe(26);
+    expect(facts[1].date.getHours()).toBe(0);
+  });
+
+  it('rejeita resposta que não parece um .ics (ex.: página HTML de login)', () => {
+    expect(() => mapIcsToFacts('<!DOCTYPE html><html>faça login</html>')).toThrow(/não parece um calendário válido/);
   });
 });
