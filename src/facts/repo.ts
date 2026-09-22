@@ -14,6 +14,9 @@ export type FactInput = {
   meta: Record<string, unknown>;
 };
 
+/** `incoming` precisa ser o conjunto completo e atual da fonte — tudo que não estiver
+ * nele é apagado. Nunca chame com `[]` por causa de um erro de coleta engolido; deixe
+ * o erro propagar, senão isso apaga silenciosamente todos os facts daquela fonte. */
 export async function syncFactsForSource(
   source: FactInput['source'],
   incoming: FactInput[],
