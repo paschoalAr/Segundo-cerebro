@@ -33,20 +33,20 @@ describe('mapMoodleUpcomingToFacts', () => {
 });
 
 describe('dropAssignDuplicates', () => {
-  it('remove o evento genérico de uma entrega que já veio pelo mod_assign', () => {
+  it('remove o evento genérico de uma entrega que já veio pelo mod_assign (instance = cmid, não o id da entrega)', () => {
     const events: Parameters<typeof dropAssignDuplicates>[0] = [
       {
-        id: 1,
+        id: 98078474,
         name: 'Entrega do T1 está marcado(a) para esta data',
         timestart: 1758560400,
         timeduration: 0,
         eventtype: 'due',
         course: { fullname: 'Sistemas Distribuídos' },
         modulename: 'assign',
-        instance: 217843,
+        instance: 3783141, // cmid, não o id=217843 da entrega em mod_assign_get_assignments
       },
     ];
-    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual([]);
+    expect(dropAssignDuplicates(events, new Set([3783141]))).toEqual([]);
   });
 
   it('mantém eventtype=due que não vem de uma entrega (ex.: escolha de grupo)', () => {
@@ -62,14 +62,14 @@ describe('dropAssignDuplicates', () => {
         instance: 999,
       },
     ];
-    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual(events);
+    expect(dropAssignDuplicates(events, new Set([3783141]))).toEqual(events);
   });
 
   it('mantém eventos sem modulename/instance (formato antigo/incompleto)', () => {
     const events: Parameters<typeof dropAssignDuplicates>[0] = [
       { id: 3, name: 'x', timestart: 1758560400, timeduration: 0, eventtype: 'due', course: null },
     ];
-    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual(events);
+    expect(dropAssignDuplicates(events, new Set([3783141]))).toEqual(events);
   });
 });
 
@@ -81,8 +81,8 @@ describe('mapMoodleAssignmentsToFacts', () => {
           id: 10,
           fullname: 'Computação Paralela',
           assignments: [
-            { id: 100, name: 'TPP1', duedate: 1758560400 },
-            { id: 101, name: 'Sem prazo', duedate: 0 },
+            { id: 100, cmid: 200, name: 'TPP1', duedate: 1758560400 },
+            { id: 101, cmid: 201, name: 'Sem prazo', duedate: 0 },
           ],
         },
       ],

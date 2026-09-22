@@ -24,17 +24,19 @@ export type MoodleAssignmentsResponse = {
   courses: Array<{
     id: number;
     fullname: string;
-    assignments: Array<{ id: number; name: string; duedate: number }>;
+    assignments: Array<{ id: number; cmid: number; name: string; duedate: number }>;
   }>;
 };
 
 /** O calendário do Moodle (core_calendar_get_calendar_upcoming_view) repete o prazo de
- * cada entrega do mod_assign como um evento genérico (modulename='assign', instance=id
- * da entrega) — sem filtrar isso, a mesma entrega aparece duas vezes em `facts` (uma como
- * 'event', outra como 'deadline'). Outros eventtype='due' (ex.: prazo de uma atividade de
- * escolha de grupo) não vêm do mod_assign e continuam passando normalmente. */
-export function dropAssignDuplicates(events: MoodleUpcomingEvent[], assignmentIds: Set<number>): MoodleUpcomingEvent[] {
-  return events.filter((e) => !(e.modulename === 'assign' && e.instance !== undefined && assignmentIds.has(e.instance)));
+ * cada entrega do mod_assign como um evento genérico — sem filtrar isso, a mesma entrega
+ * aparece duas vezes em `facts` (uma como 'event', outra como 'deadline'). O `instance` do
+ * evento de calendário é o **cmid** (course module id) da entrega, não o `id` dela — os dois
+ * são valores diferentes no Moodle, confirmado contra dados reais (ex.: id=217843,
+ * cmid=3783141 pra mesma entrega). Outros eventtype='due' que não vêm do mod_assign
+ * (ex.: prazo de uma atividade de escolha de grupo) continuam passando normalmente. */
+export function dropAssignDuplicates(events: MoodleUpcomingEvent[], assignmentCmids: Set<number>): MoodleUpcomingEvent[] {
+  return events.filter((e) => !(e.modulename === 'assign' && e.instance !== undefined && assignmentCmids.has(e.instance)));
 }
 
 export function mapMoodleUpcomingToFacts(events: MoodleUpcomingEvent[]): FactInput[] {
@@ -135,8 +137,8 @@ export async function fetchMoodleFacts(): Promise<FactInput[]> {
       .onConflictDoUpdate({ target: sourcesCache.source, set: { payload: raw, fetchedAt: new Date() } });
   }
 
-  const assignmentIds = new Set(raw.assignments.courses.flatMap((c) => c.assignments.map((a) => a.id)));
-  const upcoming = dropAssignDuplicates(raw.upcoming, assignmentIds);
+  const assignmentCmids = new Set(raw.assignments.courses.flatMap((c) => c.assignments.map((a) => a.cmid)));
+  const upcoming = dropAssignDuplicates(raw.upcoming, assignmentCmids);
   const all = [...mapMoodleUpcomingToFacts(upcoming), ...mapMoodleAssignmentsToFacts(raw.assignments)];
 
   // mod_assign_get_assignments devolve entregas de TODAS as cadeiras já cursadas, sem
