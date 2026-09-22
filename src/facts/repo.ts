@@ -56,6 +56,11 @@ export async function syncFactsForSource(
   return { upserts: plan.upserts.length, deletes: plan.deletes.length };
 }
 
+export async function insertFact(input: FactInput): Promise<number> {
+  const [row] = await db.insert(facts).values(input).returning({ id: facts.id });
+  return row.id;
+}
+
 export async function listFactsInRange(start: Date, end: Date) {
   return db
     .select()

@@ -16,6 +16,13 @@ export async function listKnowledge() {
     .orderBy(knowledge.title);
 }
 
+export async function listKnowledgeFull() {
+  return db
+    .select({ slug: knowledge.slug, title: knowledge.title, content: knowledge.content })
+    .from(knowledge)
+    .orderBy(knowledge.title);
+}
+
 export async function listClaudeMemorySlugs(): Promise<string[]> {
   const rows = await db
     .select({ slug: knowledge.slug })
