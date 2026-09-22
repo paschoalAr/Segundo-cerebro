@@ -18,8 +18,10 @@ export default async function SemanaPage({
   searchParams: Promise<{ w?: string }>;
 }) {
   const { w } = await searchParams;
-  const offset = w ? Number(w) : 0;
-  const base = addWeeks(new Date(), Number.isFinite(offset) ? offset : 0);
+  const rawOffset = w ? Number(w) : 0;
+  // ~10 anos pra cada lado — evita ?w= absurdo virar Invalid Date em addWeeks/getWeekRange.
+  const offset = Number.isFinite(rawOffset) ? Math.max(-520, Math.min(520, rawOffset)) : 0;
+  const base = addWeeks(new Date(), offset);
   const { start, end } = getWeekRange(base);
 
   const [items, statusRow] = await Promise.all([
