@@ -1,10 +1,11 @@
 # Plano 1 — Fundação — ESTADO
 
-**Atualizado:** 2026-09-20 14:20
-**Branch:** `plano-1-fundacao` (HEAD `17e4927`), ainda não mergeada em `main`, sem remote.
+**Atualizado:** 2026-09-22
+**Branch:** `plano-1-fundacao` (HEAD `9801384`), pushada em `origin` (https://github.com/paschoalAr/Segundo-cerebro), ainda não mergeada em `main`.
 **Método:** superpowers:subagent-driven-development (implementador → revisão de spec → revisão de qualidade por task).
 **Testes:** `npm test` → 18/18 passando · `npm run typecheck` limpo · `npm run build` completo passa (com `.env` real).
-**Neon:** projeto `holy-lab-38634353` criado por fora (dashboard), connection string no `.env` local. Migração aplicada, `knowledge` populada (22 docs). `.env` NÃO tem `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` ainda.
+**Neon:** projeto `holy-lab-38634353` criado por fora (dashboard), connection string no `.env` local. Migração aplicada, `knowledge` populada (22 docs).
+**Deploy:** Vercel projeto `segundo-cerebro` (`arthurpaschoal500gmailcoms-projects`), produção em `https://segundo-cerebro-nu-flax.vercel.app`. `.vercelignore` criado (22/09) pra excluir `.env` do bundle de deploy — 1º deploy tinha empacotado o `.env` local por engano, corrigido e redeployado.
 
 ## Tasks
 
@@ -20,23 +21,18 @@
 | 8 | Layout + nav 4 telas | ✅ | `49287db` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
 | 9 | Tela Inbox | ✅ | `b0b8479` | Revisão de spec + qualidade feitas em 20/09 (aprovado) |
 | 10 | Tela Manual | ✅ | `479403a` | Revisão de spec + qualidade feitas em 20/09 (aprovado). Reviewer notou (não bloqueante, sem impacto hoje pois `planRuns` está vazia): cor do erro em `page.tsx` usa `var(--fg)` em vez de uma cor de erro de verdade; sem estado "salvando..." no botão Salvar |
-| 11 | Deploy Vercel | ⬜ | — | Falta só `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` (Google Cloud) pra testar login completo local, depois criar projeto Vercel |
+| 11 | Deploy Vercel | ✅ | `9801384` | OAuth client criado no Google Cloud (22/09), login testado local e em produção. Deploy em `https://segundo-cerebro-nu-flax.vercel.app`, repo `paschoalAr/Segundo-cerebro` no GitHub |
 
-**Todo o código do Plano 1 está escrito, migrado e rodando localmente.** `npm run build` completo passa. Única pendência real: Google Cloud OAuth client (Google Cloud, item 2 de "Bloqueios") — depois disso é testar o login de verdade e partir pro deploy (Task 11).
+**Plano 1 completo: código escrito, testado, migrado, deployado em produção e no GitHub.** Falta só a revisão final do branch e o merge em `main`.
 
 ## Bloqueios (passos manuais do Arthur)
 
-1. ~~**Neon:** criar projeto, copiar connection string pooled.~~ ✅ Feito em 20/09 (projeto `holy-lab-38634353`, `.env` com `DATABASE_URL`, migração aplicada, knowledge sincronizada).
-2. **Google Cloud:** projeto `segundo-cerebro` → ativar Google Calendar API → tela de consentimento (Externo, Arthur como usuário de teste) → credencial OAuth tipo Web com redirect `http://localhost:3000/api/auth/callback/google` (dev roda na porta 3001 neste ambiente via `.claude/launch.json`, mas o redirect URI do Google fica em `localhost:3000` mesmo — ajustar a porta do dev local se for testar, ou registrar as duas portas no Google Cloud) → Client ID + Secret.
-3. ~~Criar `.env`, gerar `AUTH_SECRET`/`TOKEN_ENCRYPTION_KEY`.~~ ✅ Feito em 20/09. Só faltam `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` no `.env` depois do passo 2.
+Todos resolvidos. ~~Neon~~ ✅ 20/09. ~~Google Cloud OAuth client~~ ✅ 22/09 (projeto `segundo-cerebro` no Google Cloud, tela de consentimento Externa, Arthur como usuário de teste, credencial Web com redirects `localhost:3001` e produção Vercel). ~~`.env`~~ ✅ completo.
 
 ## Próximos passos, em ordem
 
-1. **Arthur resolve o bloqueio 2 acima** (Google Cloud OAuth client) e cola `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` no `.env`.
-2. Teste manual do fluxo OAuth completo (Task 5, step 7 do plano): login com o e-mail permitido, checar `oauth_tokens` populada; login com outro e-mail, checar `AccessDenied`.
-3. Task 11 (Vercel: `npx vercel link`, env vars no dashboard, redirect de produção no Google, `vercel --prod`, criar repo GitHub privado + push).
-4. Revisão final do branch → superpowers:finishing-a-development-branch → merge em `main`.
-5. Depois de tudo pronto: Plano 2 — Fontes (client Google Calendar com refresh, calendário "Cérebro", coletores Moodle/GCal/Outlook → `facts`, tela Semana com eventos reais).
+1. Revisão final do branch → superpowers:finishing-a-development-branch → merge em `main`.
+2. Depois de tudo pronto: Plano 2 — Fontes (client Google Calendar com refresh, calendário "Cérebro", coletores Moodle/GCal/Outlook → `facts`, tela Semana com eventos reais).
 
 ## Notas
 
