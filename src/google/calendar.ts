@@ -10,6 +10,7 @@ export type GCalEvent = {
   status: string;
   start: GCalEventTime;
   end: GCalEventTime;
+  extendedProperties?: { private?: Record<string, string> };
 };
 
 async function gcalFetch<T>(accessToken: string, path: string): Promise<T> {
@@ -75,4 +76,57 @@ export function mapGcalEventToFact(calendarId: string, event: GCalEvent): FactIn
     sourceRef: event.id,
     meta: { calendarId },
   };
+}
+
+export function toGCalEventTime(date: Date): GCalEventTime {
+  return { dateTime: date.toISOString() };
+}
+
+export async function insertEvent(
+  accessToken: string,
+  calendarId: string,
+  event: { summary: string; start: GCalEventTime; end: GCalEventTime; blockId: number },
+): Promise<string> {
+  const res = await fetch(`${CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      summary: event.summary,
+      start: event.start,
+      end: event.end,
+      extendedProperties: { private: { block_id: String(event.blockId) } },
+    }),
+  });
+  if (!res.ok) throw new Error(`Falha ao criar evento no Cérebro: ${res.status} ${await res.text()}`);
+  const data = (await res.json()) as { id: string };
+  return data.id;
+}
+
+/** Tolerante a 404: o Arthur pode ter apagado o evento manualmente — nesse caso só a linha do banco importa daqui pra frente. */
+export async function patchEvent(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  event: { summary: string; start: GCalEventTime; end: GCalEventTime },
+): Promise<void> {
+  const res = await fetch(
+    `${CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ summary: event.summary, start: event.start, end: event.end }),
+    },
+  );
+  if (res.status === 404) return;
+  if (!res.ok) throw new Error(`Falha ao atualizar evento no Cérebro: ${res.status} ${await res.text()}`);
+}
+
+/** Tolerante a 404/410: apagar um evento que já não existe é sucesso, não erro. */
+export async function deleteEvent(accessToken: string, calendarId: string, eventId: string): Promise<void> {
+  const res = await fetch(
+    `${CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (res.status === 404 || res.status === 410) return;
+  if (!res.ok) throw new Error(`Falha ao apagar evento no Cérebro: ${res.status} ${await res.text()}`);
 }
