@@ -33,6 +33,7 @@ export const planRuns = pgTable('plan_runs', {
   outputTokens: integer('output_tokens'),
   summary: text('summary'),
   error: text('error'),
+  conflicts: jsonb('conflicts').$type<{ text: string; severity: 'info' | 'warn' }[]>().default([]),
 });
 
 export const inboxItems = pgTable('inbox_items', {
