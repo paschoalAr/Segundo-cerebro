@@ -1,8 +1,11 @@
 import { signOut } from '@/auth';
+import { countOpenQuestions } from '@/src/questions/repo';
+import { countPendingSuggestions } from '@/src/manual/suggestions-repo';
 import { Nav } from './nav';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  // pendingCount vira consulta real no plano 3 (perguntas + sugestões abertas).
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const [openQuestions, pendingSuggestions] = await Promise.all([countOpenQuestions(), countPendingSuggestions()]);
+
   const logout = (
     <form
       action={async () => {
@@ -18,7 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Nav pendingCount={0} logout={logout} />
+      <Nav pendingCount={openQuestions + pendingSuggestions} logout={logout} />
       <main className="container">{children}</main>
     </>
   );
