@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { sourcesCache } from '@/src/db/schema';
 import { isCacheStale } from '@/src/facts/cache';
+import { getCollectionWindow } from '@/src/facts/window';
 import type { FactInput } from '@/src/facts/repo';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -123,5 +124,12 @@ export async function fetchMoodleFacts(): Promise<FactInput[]> {
       .onConflictDoUpdate({ target: sourcesCache.source, set: { payload: raw, fetchedAt: new Date() } });
   }
 
-  return [...mapMoodleUpcomingToFacts(raw.upcoming), ...mapMoodleAssignmentsToFacts(raw.assignments)];
+  const all = [...mapMoodleUpcomingToFacts(raw.upcoming), ...mapMoodleAssignmentsToFacts(raw.assignments)];
+
+  // mod_assign_get_assignments devolve entregas de TODAS as cadeiras já cursadas, sem
+  // filtro de data (achado verificando contra o Moodle real — vinham dezenas de prazos de
+  // semestres passados). A janela de coleta é aplicada aqui, não nos mappers puros, pra eles
+  // continuarem testáveis sem depender da hora atual.
+  const { start, end } = getCollectionWindow();
+  return all.filter((f) => f.date >= start && f.date <= end);
 }

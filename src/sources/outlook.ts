@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { sourcesCache } from '@/src/db/schema';
 import { isCacheStale } from '@/src/facts/cache';
+import { getCollectionWindow } from '@/src/facts/window';
 import type { FactInput } from '@/src/facts/repo';
 
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -52,7 +53,7 @@ export async function fetchOutlookFacts(): Promise<FactInput[]> {
   let icsText: string;
   if (cached && !isCacheStale(cached.fetchedAt, new Date(), CACHE_TTL_MS)) {
     icsText = (cached.payload as { icsText: string }).icsText;
-    return mapIcsToFacts(icsText);
+    return filterToWindow(mapIcsToFacts(icsText));
   }
 
   icsText = await fetchIcsText();
@@ -66,5 +67,13 @@ export async function fetchOutlookFacts(): Promise<FactInput[]> {
     .values({ source: 'outlook', payload: { icsText }, fetchedAt: new Date() })
     .onConflictDoUpdate({ target: sourcesCache.source, set: { payload: { icsText }, fetchedAt: new Date() } });
 
-  return facts;
+  return filterToWindow(facts);
+}
+
+// Um .ics publicado tende a listar o calendário inteiro (passado e futuro), não só o
+// período que importa — mesmo achado que o coletor do Moodle teve contra a API real.
+// Fica aqui, não em mapIcsToFacts, pra o mapper continuar puro/testável sem depender da hora atual.
+function filterToWindow(facts: FactInput[]): FactInput[] {
+  const { start, end } = getCollectionWindow();
+  return facts.filter((f) => f.date >= start && f.date <= end);
 }
