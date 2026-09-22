@@ -12,18 +12,27 @@ export function isExpired(expiresAt: Date | null, now: Date, bufferMs = EXPIRY_B
 }
 
 async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; expiresAt: Date }> {
+  const clientId = process.env.AUTH_GOOGLE_ID;
+  const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+  if (!clientId || !clientSecret) throw new Error('AUTH_GOOGLE_ID/AUTH_GOOGLE_SECRET não definidas');
+
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      client_id: process.env.AUTH_GOOGLE_ID ?? '',
-      client_secret: process.env.AUTH_GOOGLE_SECRET ?? '',
+      client_id: clientId,
+      client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
   });
   if (!res.ok) throw new Error(`Falha ao renovar token do Google: ${res.status} ${await res.text()}`);
-  const data = (await res.json()) as { access_token: string; expires_in: number };
+
+  const data = (await res.json()) as { access_token?: unknown; expires_in?: unknown };
+  if (typeof data.access_token !== 'string' || typeof data.expires_in !== 'number') {
+    throw new Error('Resposta inesperada do endpoint de token do Google');
+  }
+
   return { accessToken: data.access_token, expiresAt: new Date(Date.now() + data.expires_in * 1000) };
 }
 
