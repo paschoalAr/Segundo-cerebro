@@ -23,6 +23,13 @@ describe('mapMoodleUpcomingToFacts', () => {
   it('ignora eventos sem timestart', () => {
     expect(mapMoodleUpcomingToFacts([{ id: 2, name: 'x', timestart: 0, timeduration: 0, eventtype: 'other', course: null }])).toEqual([]);
   });
+
+  it('evento pontual (com timestart, sem timeduration) fica com endDate null', () => {
+    const facts = mapMoodleUpcomingToFacts([
+      { id: 3, name: 'Entrega', timestart: 1758560400, timeduration: 0, eventtype: 'due', course: null },
+    ]);
+    expect(facts[0].endDate).toBeNull();
+  });
 });
 
 describe('mapMoodleAssignmentsToFacts', () => {
