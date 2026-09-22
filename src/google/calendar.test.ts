@@ -43,5 +43,10 @@ describe('mapGcalEventToFact', () => {
     });
     expect(fact.allDay).toBe(true);
     expect(fact.title).toBe('(sem título)');
+    // vitest.config.ts fixa TZ=America/Sao_Paulo — meia-noite local, não UTC.
+    expect(fact.date.getFullYear()).toBe(2026);
+    expect(fact.date.getMonth()).toBe(8);
+    expect(fact.date.getDate()).toBe(26);
+    expect(fact.date.getHours()).toBe(0);
   });
 });
