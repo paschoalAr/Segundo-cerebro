@@ -14,6 +14,8 @@ export type MoodleUpcomingEvent = {
   timeduration: number;
   eventtype: string;
   course: { fullname: string } | null;
+  modulename?: string;
+  instance?: number;
 };
 
 export type MoodleCourse = { id: number; fullname: string };
@@ -25,6 +27,15 @@ export type MoodleAssignmentsResponse = {
     assignments: Array<{ id: number; name: string; duedate: number }>;
   }>;
 };
+
+/** O calendário do Moodle (core_calendar_get_calendar_upcoming_view) repete o prazo de
+ * cada entrega do mod_assign como um evento genérico (modulename='assign', instance=id
+ * da entrega) — sem filtrar isso, a mesma entrega aparece duas vezes em `facts` (uma como
+ * 'event', outra como 'deadline'). Outros eventtype='due' (ex.: prazo de uma atividade de
+ * escolha de grupo) não vêm do mod_assign e continuam passando normalmente. */
+export function dropAssignDuplicates(events: MoodleUpcomingEvent[], assignmentIds: Set<number>): MoodleUpcomingEvent[] {
+  return events.filter((e) => !(e.modulename === 'assign' && e.instance !== undefined && assignmentIds.has(e.instance)));
+}
 
 export function mapMoodleUpcomingToFacts(events: MoodleUpcomingEvent[]): FactInput[] {
   return events
@@ -124,7 +135,9 @@ export async function fetchMoodleFacts(): Promise<FactInput[]> {
       .onConflictDoUpdate({ target: sourcesCache.source, set: { payload: raw, fetchedAt: new Date() } });
   }
 
-  const all = [...mapMoodleUpcomingToFacts(raw.upcoming), ...mapMoodleAssignmentsToFacts(raw.assignments)];
+  const assignmentIds = new Set(raw.assignments.courses.flatMap((c) => c.assignments.map((a) => a.id)));
+  const upcoming = dropAssignDuplicates(raw.upcoming, assignmentIds);
+  const all = [...mapMoodleUpcomingToFacts(upcoming), ...mapMoodleAssignmentsToFacts(raw.assignments)];
 
   // mod_assign_get_assignments devolve entregas de TODAS as cadeiras já cursadas, sem
   // filtro de data (achado verificando contra o Moodle real — vinham dezenas de prazos de

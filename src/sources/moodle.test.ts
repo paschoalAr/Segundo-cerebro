@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapMoodleAssignmentsToFacts, mapMoodleUpcomingToFacts } from './moodle';
+import { dropAssignDuplicates, mapMoodleAssignmentsToFacts, mapMoodleUpcomingToFacts } from './moodle';
 
 describe('mapMoodleUpcomingToFacts', () => {
   it('mapeia eventos do calendário, incluindo o nome da cadeira no título', () => {
@@ -29,6 +29,47 @@ describe('mapMoodleUpcomingToFacts', () => {
       { id: 3, name: 'Entrega', timestart: 1758560400, timeduration: 0, eventtype: 'due', course: null },
     ]);
     expect(facts[0].endDate).toBeNull();
+  });
+});
+
+describe('dropAssignDuplicates', () => {
+  it('remove o evento genérico de uma entrega que já veio pelo mod_assign', () => {
+    const events: Parameters<typeof dropAssignDuplicates>[0] = [
+      {
+        id: 1,
+        name: 'Entrega do T1 está marcado(a) para esta data',
+        timestart: 1758560400,
+        timeduration: 0,
+        eventtype: 'due',
+        course: { fullname: 'Sistemas Distribuídos' },
+        modulename: 'assign',
+        instance: 217843,
+      },
+    ];
+    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual([]);
+  });
+
+  it('mantém eventtype=due que não vem de uma entrega (ex.: escolha de grupo)', () => {
+    const events: Parameters<typeof dropAssignDuplicates>[0] = [
+      {
+        id: 2,
+        name: 'Escolha seu grupo (Data limite)',
+        timestart: 1758560400,
+        timeduration: 0,
+        eventtype: 'due',
+        course: { fullname: 'Cultura Digital' },
+        modulename: 'choicegroup',
+        instance: 999,
+      },
+    ];
+    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual(events);
+  });
+
+  it('mantém eventos sem modulename/instance (formato antigo/incompleto)', () => {
+    const events: Parameters<typeof dropAssignDuplicates>[0] = [
+      { id: 3, name: 'x', timestart: 1758560400, timeduration: 0, eventtype: 'due', course: null },
+    ];
+    expect(dropAssignDuplicates(events, new Set([217843]))).toEqual(events);
   });
 });
 
