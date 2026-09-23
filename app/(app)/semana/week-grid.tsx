@@ -39,12 +39,17 @@ export function WeekGrid({ weekStart, items, now }: { weekStart: Date; items: Gr
   }
 
   return (
-    <div className="wk" style={{ ['--wk-hour-px' as string]: `${HOUR_PX}px` }}>
+    <section
+      className="wk"
+      aria-label={`Grade da semana de ${weekStart.toLocaleDateString('pt-BR')}`}
+      style={{ ['--wk-hour-px' as string]: `${HOUR_PX}px` }}
+    >
       <div className="wk-head">
         <div className="wk-gutter-cell" />
         {days.map((d, i) => (
           <div key={i} className="wk-head-cell" data-today={i === todayColumn}>
             {WEEKDAYS[i]}
+            {i === todayColumn && <span className="sr-only"> (hoje)</span>}
             <span className="wk-head-day">
               {String(d.getDate()).padStart(2, '0')}/{String(d.getMonth() + 1).padStart(2, '0')}
             </span>
@@ -92,6 +97,7 @@ export function WeekGrid({ weekStart, items, now }: { weekStart: Date; items: Gr
                     width: `calc(${100 / p.lanes}% - 4px)`,
                   }}
                   title={`${hhmm(p.start)} · ${p.title}`}
+                  aria-label={`${WEEKDAYS[i]} ${hhmm(p.start)}${p.end ? ` às ${hhmm(p.end)}` : ''} · ${p.title}`}
                 >
                   <span className="wk-ev-time">{hhmm(p.start)}</span>
                   {p.title}
@@ -105,6 +111,6 @@ export function WeekGrid({ weekStart, items, now }: { weekStart: Date; items: Gr
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
