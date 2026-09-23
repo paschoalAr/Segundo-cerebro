@@ -97,3 +97,116 @@ export function dayIndex(date: Date, weekStart: Date): number {
   const days = Math.round((startOfDay(date).getTime() - startOfDay(weekStart).getTime()) / 86_400_000);
   return days >= 0 && days <= 6 ? days : -1;
 }
+
+export type PlacedItem = GridItem & {
+  day: number;
+  topPct: number;
+  heightPct: number;
+  /** Faixa horizontal dentro da coluna, 0-based. */
+  lane: number;
+  /** Quantas faixas o grupo de sobreposição deste item usa. */
+  lanes: number;
+};
+
+function rangeMinutes(range: HourRange): number {
+  return (range.endHour - range.startHour) * 60;
+}
+
+/**
+ * Posiciona os itens de UM dia. Dois passos:
+ *
+ * 1. Agrupa em "grupos de sobreposição": itens encadeados por cruzamento. Um grupo
+ *    fecha quando começa um item depois do fim mais tardio visto até ali.
+ * 2. Dentro do grupo, cada item pega a primeira faixa livre (a que terminou antes dele).
+ *    A largura sai da contagem de faixas DO GRUPO, não do dia inteiro — senão um único
+ *    par de eventos sobrepostos de manhã espremeria a tarde toda.
+ *
+ * Encostar não é cruzar: fim 10:00 e começo 10:00 dividem faixa sem conflito.
+ */
+export function placeDay(items: GridItem[], range: HourRange): PlacedItem[] {
+  const total = rangeMinutes(range);
+  const floor = range.startHour * 60;
+
+  const sorted = [...items].sort((a, b) => {
+    const byStart = a.start.getTime() - b.start.getTime();
+    if (byStart !== 0) return byStart;
+    return itemEnd(b).getTime() - itemEnd(a).getTime();
+  });
+
+  const out: PlacedItem[] = [];
+  let group: PlacedItem[] = [];
+  let laneEnds: number[] = [];
+  let groupEnd = -Infinity;
+
+  const closeGroup = () => {
+    for (const placed of group) placed.lanes = laneEnds.length;
+    out.push(...group);
+    group = [];
+    laneEnds = [];
+    groupEnd = -Infinity;
+  };
+
+  for (const item of sorted) {
+    const startMin = minutesOfDay(item.start);
+    const end = itemEnd(item);
+    // Evento que atravessa a meia-noite termina "depois" do fim da faixa deste dia.
+    const endMin = sameCalendarDay(item.start, end) ? minutesOfDay(end) : range.endHour * 60;
+
+    if (startMin >= groupEnd) closeGroup();
+
+    let lane = laneEnds.findIndex((laneEnd) => laneEnd <= startMin);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(endMin);
+    } else {
+      laneEnds[lane] = endMin;
+    }
+    groupEnd = Math.max(groupEnd, endMin);
+
+    const top = Math.max(0, startMin - floor);
+    const drawnMinutes = Math.max(MIN_ITEM_MINUTES, endMin - startMin);
+    const height = Math.max(0, Math.min(drawnMinutes, total - top));
+
+    group.push({
+      ...item,
+      day: 0,
+      topPct: (top / total) * 100,
+      heightPct: (height / total) * 100,
+      lane,
+      lanes: 1,
+    });
+  }
+  closeGroup();
+
+  return out;
+}
+
+/** Posiciona a semana inteira: separa por coluna, posiciona cada dia, descarta o que caiu fora. */
+export function placeWeek(items: GridItem[], weekStart: Date, range: HourRange): PlacedItem[] {
+  const byDay = new Map<number, GridItem[]>();
+  for (const item of items) {
+    const day = dayIndex(item.start, weekStart);
+    if (day === -1) continue;
+    byDay.set(day, [...(byDay.get(day) ?? []), item]);
+  }
+
+  const out: PlacedItem[] = [];
+  for (const [day, dayItems] of byDay) {
+    for (const placed of placeDay(dayItems, range)) out.push({ ...placed, day });
+  }
+  return out;
+}
+
+/** Altura da linha "agora" em %, ou null quando a hora atual está fora da faixa desenhada. */
+export function nowLinePct(now: Date, range: HourRange): number | null {
+  const minutes = minutesOfDay(now);
+  const floor = range.startHour * 60;
+  const total = rangeMinutes(range);
+  if (minutes < floor || minutes > floor + total) return null;
+  return ((minutes - floor) / total) * 100;
+}
+
+/** A semana visível é a semana em que `now` cai? Só então a linha de agora faz sentido. */
+export function isSameWeek(weekStart: Date, now: Date): boolean {
+  return dayIndex(now, weekStart) !== -1;
+}
