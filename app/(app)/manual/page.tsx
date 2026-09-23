@@ -48,7 +48,7 @@ export default async function ManualPage() {
             </span>
           </div>
           {r.summary && <div>{r.summary}</div>}
-          {r.error && <div style={{ color: 'var(--fg)' }}>Erro: {r.error}</div>}
+          {r.error && <div style={{ color: 'var(--alert)' }}>Erro: {r.error}</div>}
         </div>
       ))}
     </>

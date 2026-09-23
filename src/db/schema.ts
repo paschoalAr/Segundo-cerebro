@@ -1,3 +1,4 @@
+import { BLOCK_KINDS } from '@/src/plan/categories';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -14,7 +15,7 @@ import {
 export const inboxStatus = pgEnum('inbox_status', ['new', 'processed', 'ignored']);
 export const factKind = pgEnum('fact_kind', ['event', 'deadline', 'task', 'info']);
 export const factSource = pgEnum('fact_source', ['moodle', 'gcal', 'outlook', 'inbox']);
-export const blockKind = pgEnum('block_kind', ['study', 'task', 'travel', 'buffer']);
+export const blockKind = pgEnum('block_kind', BLOCK_KINDS);
 export const blockStatus = pgEnum('block_status', ['planned', 'done', 'skipped']);
 export const questionStatus = pgEnum('question_status', ['open', 'answered', 'dismissed']);
 export const suggestionStatus = pgEnum('suggestion_status', ['pending', 'accepted', 'rejected']);
@@ -22,18 +23,29 @@ export const knowledgeSource = pgEnum('knowledge_source', ['claude-memory', 'not
 export const runTrigger = pgEnum('run_trigger', ['cron', 'manual']);
 export const runStatus = pgEnum('run_status', ['running', 'ok', 'error']);
 
-export const planRuns = pgTable('plan_runs', {
-  id: serial('id').primaryKey(),
-  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
-  finishedAt: timestamp('finished_at', { withTimezone: true }),
-  trigger: runTrigger('trigger').notNull(),
-  status: runStatus('status').notNull().default('running'),
-  inputTokens: integer('input_tokens'),
-  cacheReadTokens: integer('cache_read_tokens'),
-  outputTokens: integer('output_tokens'),
-  summary: text('summary'),
-  error: text('error'),
-});
+export const planRuns = pgTable(
+  'plan_runs',
+  {
+    id: serial('id').primaryKey(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    trigger: runTrigger('trigger').notNull(),
+    status: runStatus('status').notNull().default('running'),
+    inputTokens: integer('input_tokens'),
+    cacheReadTokens: integer('cache_read_tokens'),
+    outputTokens: integer('output_tokens'),
+    summary: text('summary'),
+    error: text('error'),
+    conflicts: jsonb('conflicts').$type<{ text: string; severity: 'info' | 'warn' }[]>().default([]),
+  },
+  (t) => [
+    // Trava de concorrência: no máximo UM run sem finished_at. O índice é sobre a constante
+    // (1), então todas as linhas em voo colidem entre si. Ver src/runs/lock.ts.
+    uniqueIndex('plan_runs_one_running_idx')
+      .on(sql`(1)`)
+      .where(sql`${t.finishedAt} is null`),
+  ],
+);
 
 export const inboxItems = pgTable('inbox_items', {
   id: serial('id').primaryKey(),
