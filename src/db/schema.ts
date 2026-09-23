@@ -1,7 +1,9 @@
 import { BLOCK_KINDS } from '@/src/plan/categories';
+import { SECTORS } from '@/src/sectors/sector';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -22,6 +24,7 @@ export const suggestionStatus = pgEnum('suggestion_status', ['pending', 'accepte
 export const knowledgeSource = pgEnum('knowledge_source', ['claude-memory', 'note']);
 export const runTrigger = pgEnum('run_trigger', ['cron', 'manual']);
 export const runStatus = pgEnum('run_status', ['running', 'ok', 'error']);
+export const sectorEnum = pgEnum('sector', SECTORS);
 
 export const planRuns = pgTable(
   'plan_runs',
@@ -67,10 +70,11 @@ export const facts = pgTable(
     source: factSource('source').notNull(),
     sourceRef: text('source_ref').notNull(),
     meta: jsonb('meta').$type<Record<string, unknown>>().notNull().default({}),
+    sector: sectorEnum('sector'),
     firstSeen: timestamp('first_seen', { withTimezone: true }).notNull().defaultNow(),
     lastSeen: timestamp('last_seen', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('facts_source_ref_idx').on(t.source, t.sourceRef)],
+  (t) => [uniqueIndex('facts_source_ref_idx').on(t.source, t.sourceRef), index('facts_sector_idx').on(t.sector)],
 );
 
 export const planBlocks = pgTable(
@@ -82,6 +86,7 @@ export const planBlocks = pgTable(
     start: timestamp('start', { withTimezone: true }).notNull(),
     end: timestamp('end', { withTimezone: true }).notNull(),
     kind: blockKind('kind').notNull(),
+    sector: sectorEnum('sector'),
     gcalEventId: text('gcal_event_id'),
     status: blockStatus('status').notNull().default('planned'),
     reason: text('reason').notNull(),
@@ -93,6 +98,7 @@ export const planBlocks = pgTable(
     uniqueIndex('plan_blocks_gcal_event_id_idx')
       .on(t.gcalEventId)
       .where(sql`${t.gcalEventId} is not null`),
+    index('plan_blocks_sector_idx').on(t.sector),
   ],
 );
 
