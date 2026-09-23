@@ -8,13 +8,16 @@ const VALID: unknown = {
     { id: 3, interpretation: { type: 'ignore', why: 'já processado antes' } },
   ],
   blocks: {
-    create: [{ title: 'Estudar Redes', start: '2026-09-26T09:00:00-03:00', end: '2026-09-26T11:00:00-03:00', kind: 'study', fact_id: null, reason: 'P1 na terça' }],
+    create: [{ title: 'Estudar Redes', start: '2026-09-26T09:00:00-03:00', end: '2026-09-26T11:00:00-03:00', kind: 'study', fact_id: null, task_id: null, reason: 'P1 na terça' }],
     update: [{ id: 10, title: 'Estudar Redes (revisão)', start: '2026-09-26T09:00:00-03:00', end: '2026-09-26T11:30:00-03:00', reason: 'ajuste de duração' }],
     delete: [{ id: 11, reason: 'já não é mais necessário' }],
   },
   conflicts: [{ text: 'Sexta tem 3 provas e só 4h livres', severity: 'warn' }],
   questions: [{ text: 'Prefere estudar de manhã ou à noite?', context: { motivo: 'padrão não claro no manual' } }],
   manual_suggestions: [{ section: 'Faculdade', text: 'Prova de Redes = 6h de estudo', from_question_id: null }],
+  task_suggestions: [
+    { title: 'Renovar o seguro do carro', sector: 'financas', due: '2026-09-30T23:59:00-03:00', reason: 'venceu no ano passado nesta época', from_question_id: null },
+  ],
   summary: 'Semana com 2 provas e 1 entrega.',
 };
 
@@ -59,8 +62,41 @@ describe('PlanOutputSchema', () => {
         conflicts: [],
         questions: [],
         manual_suggestions: [],
+        task_suggestions: [],
         summary: 'Nada novo esta semana.',
       }).success,
     ).toBe(true);
+  });
+});
+
+describe('task_suggestions', () => {
+  it('aceita sugestão sem setor e sem prazo', () => {
+    const ok = JSON.parse(JSON.stringify(VALID));
+    ok.task_suggestions = [{ title: 'Ligar pro dentista', sector: null, due: null, reason: 'apareceu na inbox', from_question_id: null }];
+    expect(PlanOutputSchema.safeParse(ok).success).toBe(true);
+  });
+
+  it('rejeita setor que não existe', () => {
+    const bad = JSON.parse(JSON.stringify(VALID));
+    bad.task_suggestions = [{ title: 'x', sector: 'faculdade', due: null, reason: 'y', from_question_id: null }];
+    expect(PlanOutputSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('exige o motivo — sugestão sem porquê não vira tarefa', () => {
+    const bad = JSON.parse(JSON.stringify(VALID));
+    bad.task_suggestions = [{ title: 'x', sector: null, due: null, from_question_id: null }];
+    expect(PlanOutputSchema.safeParse(bad).success).toBe(false);
+  });
+
+  it('aceita bloco ligado a uma tarefa', () => {
+    const ok = JSON.parse(JSON.stringify(VALID));
+    ok.blocks.create[0].task_id = 7;
+    expect(PlanOutputSchema.safeParse(ok).success).toBe(true);
+  });
+
+  it('exige task_id explícito no bloco, nem que seja null', () => {
+    const bad = JSON.parse(JSON.stringify(VALID));
+    delete bad.blocks.create[0].task_id;
+    expect(PlanOutputSchema.safeParse(bad).success).toBe(false);
   });
 });
