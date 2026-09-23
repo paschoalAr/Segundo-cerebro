@@ -8,6 +8,7 @@ import { listBlocksInRange } from './blocks-repo';
 import { fetchObservations } from './observations';
 import { listNewInboxItems } from '@/src/inbox/repo';
 import { listAnsweredSince } from '@/src/questions/repo';
+import { listOpenTasks } from '@/src/tasks/repo';
 import { createRun, finishRun, findLastRun, reapStaleRuns } from '@/src/runs/repo';
 import { getCollectionWindow } from '@/src/facts/window';
 import { buildSystemPrompt, buildUserContent } from './prompt';
@@ -36,7 +37,7 @@ export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number>
     const lastRun = await findLastRun(runId);
     const since = lastRun?.startedAt ?? new Date(0);
 
-    const [manual, knowledge, facts, blocks, observations, inboxItems, answered] = await Promise.all([
+    const [manual, knowledge, facts, blocks, observations, inboxItems, answered, openTasks] = await Promise.all([
       getManual(),
       listKnowledgeFull(),
       listFactsInRange(start, end),
@@ -44,6 +45,7 @@ export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number>
       fetchObservations(),
       listNewInboxItems(),
       listAnsweredSince(since),
+      listOpenTasks(),
     ]);
 
     const today = new Date();
@@ -59,6 +61,7 @@ export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number>
       observations,
       inboxItems,
       answeredQuestions: answered,
+      openTasks,
       manualChangedSinceLastRun: lastRun !== undefined && manual.updatedAt > lastRun.startedAt,
     });
 

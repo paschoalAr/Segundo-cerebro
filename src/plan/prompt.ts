@@ -11,6 +11,10 @@ Regras de comportamento:
 
 8. fact_id vem só da lista "Fatos" que você recebeu, e nunca do id de um item da inbox — são numerações diferentes. Um fato que você está criando agora a partir da inbox ainda não tem id: nesse caso use fact_id: null e explique o vínculo no reason. Id inventado é descartado na hora de gravar.
 
+9. Tarefa não tem hora. O que precisa ser feito mas não tem horário marcado é tarefa, não bloco: proponha em task_suggestions, com um motivo curto e — quando existir — um prazo. Setor é um de estudos, carreira, financas, saude, projetos, pessoal, ou null quando não der pra saber. Nunca invente tarefa a partir de coisa que já está na lista de "Tarefas abertas" que você recebeu.
+
+10. Quando reservar tempo pra uma tarefa que já existe, crie o bloco normalmente e aponte task_id para o número dela (o "#N" da lista de tarefas abertas). Sem tarefa correspondente, use task_id: null. Id inventado é descartado na hora de gravar, igual ao fact_id.
+
 Seções válidas do manual (use exatamente um destes valores em manual_suggestions.section): Perfil, Faculdade, Trabalho, Pessoas, Regras de planejamento.
 
 Categorias de bloco (use exatamente um destes valores em blocks.create[].kind). Cada uma vira uma cor no calendário, então escolher certo importa:
@@ -37,6 +41,7 @@ type Block = { id: number; kind: string; status: string; title: string; start: D
 type InboxItem = { id: number; text: string };
 type AnsweredQuestion = { text: string; answer: string | null };
 type KnowledgeDoc = { title: string; content: string };
+type OpenTask = { id: number; title: string; sector: string | null; due: Date | null };
 
 export type UserContentInput = {
   manual: string;
@@ -49,6 +54,7 @@ export type UserContentInput = {
   observations: string[];
   inboxItems: InboxItem[];
   answeredQuestions: AnsweredQuestion[];
+  openTasks: OpenTask[];
   manualChangedSinceLastRun: boolean;
 };
 
@@ -94,6 +100,14 @@ export function buildUserContent(
     '',
     'Itens novos na inbox:',
     input.inboxItems.map((i) => `- #${i.id} ${i.text}`).join('\n') || '(nenhum)',
+    '',
+    'Tarefas abertas:',
+    input.openTasks
+      .map(
+        (t) =>
+          `- #${t.id} ${sectorTag(t.sector)} ${t.title} — ${t.due ? `prazo ${t.due.toLocaleDateString('pt-BR')}` : 'sem prazo'}`,
+      )
+      .join('\n') || '(nenhuma)',
     '',
     'Respostas novas desde o último run:',
     input.answeredQuestions.map((q) => `- Pergunta: ${q.text}\n  Resposta: ${q.answer ?? ''}`).join('\n') || '(nenhuma)',

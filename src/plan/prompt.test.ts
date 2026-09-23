@@ -40,6 +40,7 @@ describe('buildUserContent', () => {
     observations: [] as string[],
     inboxItems: [] as never[],
     answeredQuestions: [] as never[],
+    openTasks: [] as never[],
     manualChangedSinceLastRun: false,
   };
 
@@ -74,6 +75,7 @@ describe('manual alterado desde o último run', () => {
     observations: [] as string[],
     inboxItems: [] as never[],
     answeredQuestions: [] as never[],
+    openTasks: [] as never[],
   };
 
   it('avisa no bloco variável quando o manual mudou', () => {
@@ -101,6 +103,7 @@ describe('setor no prompt', () => {
     observations: [] as string[],
     inboxItems: [] as never[],
     answeredQuestions: [] as never[],
+    openTasks: [] as never[],
     manualChangedSinceLastRun: false,
   };
 
@@ -148,5 +151,54 @@ describe('setor no prompt', () => {
 
   it('o system prompt deixa claro que a Claude não escolhe setor', () => {
     expect(buildSystemPrompt()[0].text).toContain('você não escolhe nem altera setor');
+  });
+});
+
+describe('tarefas no prompt', () => {
+  const base = {
+    manual: '# Manual',
+    knowledge: [] as never[],
+    today: new Date(2026, 8, 23),
+    weekStart: new Date(2026, 8, 21),
+    weekEnd: new Date(2026, 8, 27),
+    facts: [] as never[],
+    blocks: [] as never[],
+    observations: [] as string[],
+    inboxItems: [] as never[],
+    answeredQuestions: [] as never[],
+    manualChangedSinceLastRun: false,
+  };
+
+  it('lista as tarefas abertas com id, setor e prazo', () => {
+    const [, variable] = buildUserContent({
+      ...base,
+      openTasks: [{ id: 4, title: 'Renovar seguro', sector: 'financas', due: new Date(2026, 8, 30) }],
+    });
+    expect(variable.text).toContain('Tarefas abertas');
+    expect(variable.text).toContain('#4');
+    expect(variable.text).toContain('Renovar seguro');
+    expect(variable.text).toContain('{financas}');
+    expect(variable.text).toContain('30/09/2026');
+  });
+
+  it('tarefa sem prazo aparece como sem prazo, não como data inválida', () => {
+    const [, variable] = buildUserContent({
+      ...base,
+      openTasks: [{ id: 5, title: 'Ligar pro dentista', sector: null, due: null }],
+    });
+    expect(variable.text).toContain('sem prazo');
+    expect(variable.text).not.toContain('Invalid Date');
+  });
+
+  it('sem tarefa nenhuma mostra o placeholder', () => {
+    const [, variable] = buildUserContent({ ...base, openTasks: [] });
+    expect(variable.text).toMatch(/Tarefas abertas:\n\(nenhuma\)/);
+  });
+
+  it('o system prompt explica a diferença entre tarefa e bloco', () => {
+    const texto = buildSystemPrompt()[0].text;
+    expect(texto).toContain('task_suggestions');
+    expect(texto).toContain('Tarefa não tem hora');
+    expect(texto).toContain('task_id');
   });
 });
