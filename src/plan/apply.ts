@@ -10,6 +10,9 @@ import { createQuestion } from '@/src/questions/repo';
 import { createSuggestion } from '@/src/manual/suggestions-repo';
 import { MANUAL_SECTIONS } from '@/src/manual/sections';
 import { deriveBlockSector } from '@/src/sectors/derive';
+import { createTaskSuggestion } from '@/src/tasks/suggestions-repo';
+import { listOpenTaskIds } from '@/src/tasks/repo';
+import { sanitizeTaskId } from '@/src/tasks/task';
 import type { PlanOutput } from './schema';
 
 export type ApplySummary = {
@@ -18,6 +21,7 @@ export type ApplySummary = {
   blocksDeleted: number;
   questionsCreated: number;
   suggestionsCreated: number;
+  taskSuggestionsCreated: number;
 };
 
 export async function applyPlanOutput(output: PlanOutput, runId: number): Promise<ApplySummary> {
@@ -71,6 +75,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
   // Depois da etapa 1, que já inseriu os fatos vindos da inbox — assim um fact_id legítimo
   // criado neste mesmo run também é aceito.
   const factIds = await listAllFactIds();
+  const openTaskIds = await listOpenTaskIds();
 
   for (const create of output.blocks.create) {
     const factId = sanitizeFactId(create.fact_id, factIds);
@@ -83,7 +88,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
         kind: create.kind,
         sector: deriveBlockSector(create.kind, factSector),
         factId,
-        taskId: null,
+        taskId: sanitizeTaskId(create.task_id, openTaskIds),
         reason: create.reason,
       },
       runId,
@@ -109,11 +114,24 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
     await createSuggestion(section, s.text, s.from_question_id, runId);
   }
 
+  // 5. Sugestões de tarefa — o motor propõe, o Arthur aceita na tela Pendências.
+  for (const t of output.task_suggestions) {
+    await createTaskSuggestion({
+      title: t.title,
+      sector: t.sector,
+      due: t.due ? new Date(t.due) : null,
+      reason: t.reason,
+      fromQuestionId: t.from_question_id,
+      runId,
+    });
+  }
+
   return {
     blocksCreated: output.blocks.create.length,
     blocksUpdated: output.blocks.update.length,
     blocksDeleted: output.blocks.delete.length,
     questionsCreated: output.questions.length,
     suggestionsCreated: output.manual_suggestions.length,
+    taskSuggestionsCreated: output.task_suggestions.length,
   };
 }
