@@ -466,3 +466,14 @@ textarea, input[type="text"] {
 @media (max-width: 899px) {
   .wk { display: none; }
 }
+
+.wk-list-title {
+  font-size: 14px;
+  color: var(--txt-dim);
+  font-weight: 500;
+  margin: 16px 0 8px;
+}
+
+@media (max-width: 899px) {
+  .wk-list-title { display: none; }
+}

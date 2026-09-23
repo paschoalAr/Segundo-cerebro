@@ -7,6 +7,8 @@ import { listBlocksInRange } from '@/src/plan/blocks-repo';
 import { findLastRun } from '@/src/runs/repo';
 import { addWeeks, formatWeekLabel, getWeekRange } from '@/src/facts/week';
 import { markBlockDone, markBlockSkipped, refreshFacts } from './actions';
+import type { GridItem } from '@/src/semana/grid';
+import { WeekGrid } from './week-grid';
 
 const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -58,6 +60,34 @@ export default async function SemanaPage({
     })),
   ];
 
+  const now = new Date();
+
+  const gridItems: GridItem[] = [
+    ...facts.map((f): GridItem => ({
+      key: `fact-${f.id}`,
+      kind: 'fact',
+      title: f.title,
+      start: f.date,
+      end: f.endDate,
+      allDay: f.allDay,
+      alert: f.kind === 'deadline',
+      factKind: f.kind,
+      tag: f.source,
+    })),
+    ...blocks.map((b): GridItem => ({
+      key: `block-${b.id}`,
+      kind: 'block',
+      title: b.title,
+      start: b.start,
+      end: b.end,
+      allDay: false,
+      alert: b.kind === 'exam' || b.kind === 'assignment',
+      blockKind: b.kind,
+      status: b.status,
+      tag: b.kind,
+    })),
+  ];
+
   const byDay = new Map<string, Item[]>();
   for (const item of items) {
     const key = dayKey(item.date);
@@ -98,6 +128,10 @@ export default async function SemanaPage({
         <strong>{formatWeekLabel(start, end)}</strong>
         <a href={`/semana?w=${offset + 1}`}>próxima &rarr;</a>
       </div>
+
+      <WeekGrid weekStart={start} items={gridItems} now={now} />
+
+      <h2 className="wk-list-title">Detalhes do dia</h2>
 
       {days.map((d) => {
         const key = dayKey(d);
