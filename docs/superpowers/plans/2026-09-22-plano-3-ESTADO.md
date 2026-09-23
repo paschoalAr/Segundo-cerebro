@@ -2,7 +2,7 @@
 
 **Atualizado:** 2026-09-23
 **Branch:** `master`, HEAD `3a1a284`.
-**Testes:** `npm test` → 60/60 passando · `npm run typecheck` limpo · `npm run build` completo passa.
+**Testes:** `npm test` → 70/70 passando · `npm run typecheck` limpo · `npm run build` completo passa · `npm run check:lock-race` verde.
 
 ## Tasks
 
@@ -38,7 +38,7 @@ Depois do fix: run real concluiu com `status='ok'`, 18 blocos criados no calend�
 ### Task 11 — o que ainda falta
 
 - [x] Rodar `npx tsx scripts/run-plan-local.ts` manualmente e confirmar run `status='ok'` + blocos no calendário "Cérebro" real — feito 2026-09-23 (run #3, 18 blocos).
-- [ ] Testar a trava de concorrência (dois runs em paralelo).
+- [x] Testar a trava de concorrência (dois runs em paralelo) — feito 2026-09-23. **O teste reprovou**: `findRunningRun()` + `createRun()` no engine era check-then-act e dois processos simultâneos criaram os runs #6 e #7. Corrigido pelo plano `2026-09-23-trava-concorrencia-motor.md` — a exclusão mútua virou o índice único parcial `plan_runs_one_running_idx` (uma única linha com `finished_at IS NULL`), com reaper de 15 min pra crash. Regressão coberta por `npm run check:lock-race`.
 - [ ] Testar a tela Pendências respondendo uma pergunta / aceitando uma sugestão reais (o run #3 já deixou perguntas e sugestões prontas pra isso).
 - [ ] Configurar a tarefa no Agendador de Tarefas do Windows (gatilho "ao fazer logon" → `scripts/run-plan-local.cmd`).
 
