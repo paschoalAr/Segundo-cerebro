@@ -12,6 +12,12 @@ describe('buildSystemPrompt', () => {
     expect(blocks[0].cache_control).toEqual({ type: 'ephemeral' });
   });
 
+  it('explica de onde sai um fact_id, pra nao confundir com id de item da inbox', () => {
+    const texto = buildSystemPrompt()[0].text;
+    expect(texto).toContain('fact_id');
+    expect(texto).toContain('inbox');
+  });
+
   it('explica cada categoria de bloco para a Claude escolher certo', () => {
     const texto = buildSystemPrompt()[0].text;
     for (const kind of ['work', 'class', 'exam', 'assignment', 'study', 'personal', 'travel']) {

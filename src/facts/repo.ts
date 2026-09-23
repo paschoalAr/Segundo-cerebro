@@ -68,3 +68,9 @@ export async function listFactsInRange(start: Date, end: Date) {
     .where(and(gte(facts.date, start), lte(facts.date, end)))
     .orderBy(facts.date);
 }
+
+/** Ids de todos os fatos, pra validar referências vindas da Claude antes de gravar. */
+export async function listAllFactIds(): Promise<number[]> {
+  const rows = await db.select({ id: facts.id }).from(facts);
+  return rows.map((r) => r.id);
+}

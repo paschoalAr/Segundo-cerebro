@@ -1,9 +1,10 @@
 import { getValidAccessToken } from '@/src/google/token';
 import { deleteEvent, insertEvent, patchEvent, toGCalEventTime } from '@/src/google/calendar';
 import { gcalColorId } from './categories';
+import { sanitizeFactId } from './fact-ref';
 import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
 import { deleteBlockRow, getBlock, insertBlockDraft, setBlockGcalEventId, updateBlock } from './blocks-repo';
-import { insertFact } from '@/src/facts/repo';
+import { insertFact, listAllFactIds } from '@/src/facts/repo';
 import { markInboxIgnored, markInboxProcessed } from '@/src/inbox/repo';
 import { createQuestion } from '@/src/questions/repo';
 import { createSuggestion } from '@/src/manual/suggestions-repo';
@@ -66,6 +67,10 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
     await updateBlock(upd.id, { title: upd.title, start: new Date(upd.start), end: new Date(upd.end), reason: upd.reason }, runId);
   }
 
+  // Depois da etapa 1, que já inseriu os fatos vindos da inbox — assim um fact_id legítimo
+  // criado neste mesmo run também é aceito.
+  const factIds = await listAllFactIds();
+
   for (const create of output.blocks.create) {
     const id = await insertBlockDraft(
       {
@@ -73,7 +78,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
         start: new Date(create.start),
         end: new Date(create.end),
         kind: create.kind,
-        factId: create.fact_id,
+        factId: sanitizeFactId(create.fact_id, factIds),
         reason: create.reason,
       },
       runId,
