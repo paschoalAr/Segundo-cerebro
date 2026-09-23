@@ -8,7 +8,7 @@ import { listBlocksInRange } from './blocks-repo';
 import { fetchObservations } from './observations';
 import { listNewInboxItems } from '@/src/inbox/repo';
 import { listAnsweredSince } from '@/src/questions/repo';
-import { createRun, finishRun, findLastRun, findRunningRun } from '@/src/runs/repo';
+import { createRun, finishRun, findLastRun, reapStaleRuns } from '@/src/runs/repo';
 import { getCollectionWindow } from '@/src/facts/window';
 import { buildSystemPrompt, buildUserContent } from './prompt';
 import { PlanOutputSchema } from './schema';
@@ -23,9 +23,9 @@ function getPromptWindow(): { start: Date; end: Date } {
 }
 
 export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number> {
-  const running = await findRunningRun();
-  if (running) throw new Error('Já existe um replanejamento em andamento.');
-
+  // Sem check-then-act: `createRun` lança RunLockedError se já houver run em voo, e quem
+  // decide isso é o índice único do banco — dois processos simultâneos não passam os dois.
+  await reapStaleRuns();
   const runId = await createRun(trigger);
 
   try {
