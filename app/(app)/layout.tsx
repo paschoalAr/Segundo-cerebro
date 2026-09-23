@@ -1,17 +1,14 @@
 import { signOut } from '@/auth';
-import { countOpenQuestions } from '@/src/questions/repo';
-import { countPendingSuggestions } from '@/src/manual/suggestions-repo';
-import { Nav } from './nav';
+import { Wheel } from './wheel';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const [openQuestions, pendingSuggestions] = await Promise.all([countOpenQuestions(), countPendingSuggestions()]);
-
   const logout = (
     <form
       action={async () => {
         'use server';
         await signOut({ redirectTo: '/login' });
       }}
+      style={{ position: 'fixed', top: 8, right: 16, zIndex: 20 }}
     >
       <button type="submit" className="secondary">
         Sair
@@ -21,7 +18,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <Nav pendingCount={openQuestions + pendingSuggestions} logout={logout} />
+      <Wheel />
+      {logout}
       <main className="container">{children}</main>
     </>
   );

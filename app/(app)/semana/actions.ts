@@ -12,15 +12,15 @@ export async function refreshFacts() {
     .insert(sourcesCache)
     .values({ source: 'collect_status', payload: result, fetchedAt: new Date() })
     .onConflictDoUpdate({ target: sourcesCache.source, set: { payload: result, fetchedAt: new Date() } });
-  revalidatePath('/');
+  revalidatePath('/semana');
 }
 
 export async function markBlockDone(formData: FormData) {
   await setBlockStatus(Number(formData.get('id')), 'done');
-  revalidatePath('/');
+  revalidatePath('/semana');
 }
 
 export async function markBlockSkipped(formData: FormData) {
   await setBlockStatus(Number(formData.get('id')), 'skipped');
-  revalidatePath('/');
+  revalidatePath('/semana');
 }
