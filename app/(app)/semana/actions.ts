@@ -18,9 +18,13 @@ export async function refreshFacts() {
 export async function markBlockDone(formData: FormData) {
   await setBlockStatus(Number(formData.get('id')), 'done');
   revalidatePath('/semana');
+  revalidatePath('/');
+  revalidatePath('/setor/[slug]', 'page');
 }
 
 export async function markBlockSkipped(formData: FormData) {
   await setBlockStatus(Number(formData.get('id')), 'skipped');
   revalidatePath('/semana');
+  revalidatePath('/');
+  revalidatePath('/setor/[slug]', 'page');
 }
