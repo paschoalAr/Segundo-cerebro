@@ -1,6 +1,9 @@
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { facts } from '@/src/db/schema';
+import { calendarSectorMap } from '@/src/sectors/config';
+import { deriveFactSector } from '@/src/sectors/derive';
+import type { Sector } from '@/src/sectors/sector';
 import { planFactSync } from './sync';
 
 export type FactInput = {
@@ -31,10 +34,13 @@ export async function syncFactsForSource(
     incoming,
   );
 
+  const map = calendarSectorMap();
+
   for (const item of plan.upserts) {
+    const sector = deriveFactSector({ source: item.source, meta: item.meta }, map);
     await db
       .insert(facts)
-      .values({ ...item, lastSeen: new Date() })
+      .values({ ...item, sector, lastSeen: new Date() })
       .onConflictDoUpdate({
         target: [facts.source, facts.sourceRef],
         set: {
@@ -44,6 +50,7 @@ export async function syncFactsForSource(
           endDate: item.endDate,
           allDay: item.allDay,
           meta: item.meta,
+          sector,
           lastSeen: new Date(),
         },
       });
@@ -57,7 +64,8 @@ export async function syncFactsForSource(
 }
 
 export async function insertFact(input: FactInput): Promise<number> {
-  const [row] = await db.insert(facts).values(input).returning({ id: facts.id });
+  const sector = deriveFactSector({ source: input.source, meta: input.meta }, calendarSectorMap());
+  const [row] = await db.insert(facts).values({ ...input, sector }).returning({ id: facts.id });
   return row.id;
 }
 
@@ -73,4 +81,10 @@ export async function listFactsInRange(start: Date, end: Date) {
 export async function listAllFactIds(): Promise<number[]> {
   const rows = await db.select({ id: facts.id }).from(facts);
   return rows.map((r) => r.id);
+}
+
+/** Setor do fato ao qual um bloco está ligado — entrada de `deriveBlockSector`. */
+export async function getFactSector(id: number): Promise<Sector | null> {
+  const row = await db.query.facts.findFirst({ where: eq(facts.id, id), columns: { sector: true } });
+  return row?.sector ?? null;
 }

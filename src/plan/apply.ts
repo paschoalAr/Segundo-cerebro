@@ -4,11 +4,12 @@ import { gcalColorId } from './categories';
 import { sanitizeFactId } from './fact-ref';
 import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
 import { deleteBlockRow, getBlock, insertBlockDraft, setBlockGcalEventId, updateBlock } from './blocks-repo';
-import { insertFact, listAllFactIds } from '@/src/facts/repo';
+import { getFactSector, insertFact, listAllFactIds } from '@/src/facts/repo';
 import { markInboxIgnored, markInboxProcessed } from '@/src/inbox/repo';
 import { createQuestion } from '@/src/questions/repo';
 import { createSuggestion } from '@/src/manual/suggestions-repo';
 import { MANUAL_SECTIONS } from '@/src/manual/sections';
+import { deriveBlockSector } from '@/src/sectors/derive';
 import type { PlanOutput } from './schema';
 
 export type ApplySummary = {
@@ -72,13 +73,16 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
   const factIds = await listAllFactIds();
 
   for (const create of output.blocks.create) {
+    const factId = sanitizeFactId(create.fact_id, factIds);
+    const factSector = factId === null ? null : await getFactSector(factId);
     const id = await insertBlockDraft(
       {
         title: create.title,
         start: new Date(create.start),
         end: new Date(create.end),
         kind: create.kind,
-        factId: sanitizeFactId(create.fact_id, factIds),
+        sector: deriveBlockSector(create.kind, factSector),
+        factId,
         reason: create.reason,
       },
       runId,

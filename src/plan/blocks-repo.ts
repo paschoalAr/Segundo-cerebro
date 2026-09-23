@@ -1,6 +1,7 @@
 import { and, eq, gte, isNotNull, lte } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { planBlocks } from '@/src/db/schema';
+import type { Sector } from '@/src/sectors/sector';
 import type { BlockKind } from './categories';
 
 export type BlockInput = {
@@ -8,6 +9,7 @@ export type BlockInput = {
   start: Date;
   end: Date;
   kind: BlockKind;
+  sector: Sector | null;
   factId: number | null;
   reason: string;
 };
