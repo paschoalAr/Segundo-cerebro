@@ -22,19 +22,29 @@ export const knowledgeSource = pgEnum('knowledge_source', ['claude-memory', 'not
 export const runTrigger = pgEnum('run_trigger', ['cron', 'manual']);
 export const runStatus = pgEnum('run_status', ['running', 'ok', 'error']);
 
-export const planRuns = pgTable('plan_runs', {
-  id: serial('id').primaryKey(),
-  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
-  finishedAt: timestamp('finished_at', { withTimezone: true }),
-  trigger: runTrigger('trigger').notNull(),
-  status: runStatus('status').notNull().default('running'),
-  inputTokens: integer('input_tokens'),
-  cacheReadTokens: integer('cache_read_tokens'),
-  outputTokens: integer('output_tokens'),
-  summary: text('summary'),
-  error: text('error'),
-  conflicts: jsonb('conflicts').$type<{ text: string; severity: 'info' | 'warn' }[]>().default([]),
-});
+export const planRuns = pgTable(
+  'plan_runs',
+  {
+    id: serial('id').primaryKey(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    trigger: runTrigger('trigger').notNull(),
+    status: runStatus('status').notNull().default('running'),
+    inputTokens: integer('input_tokens'),
+    cacheReadTokens: integer('cache_read_tokens'),
+    outputTokens: integer('output_tokens'),
+    summary: text('summary'),
+    error: text('error'),
+    conflicts: jsonb('conflicts').$type<{ text: string; severity: 'info' | 'warn' }[]>().default([]),
+  },
+  (t) => [
+    // Trava de concorrência: no máximo UM run sem finished_at. O índice é sobre a constante
+    // (1), então todas as linhas em voo colidem entre si. Ver src/runs/lock.ts.
+    uniqueIndex('plan_runs_one_running_idx')
+      .on(sql`(1)`)
+      .where(sql`${t.finishedAt} is null`),
+  ],
+);
 
 export const inboxItems = pgTable('inbox_items', {
   id: serial('id').primaryKey(),

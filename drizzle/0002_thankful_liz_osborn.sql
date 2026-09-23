@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "plan_runs_one_running_idx" ON "plan_runs" USING btree ((1)) WHERE "plan_runs"."finished_at" is null;
