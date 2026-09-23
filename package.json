@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "sync-knowledge": "tsx scripts/sync-knowledge.ts"
+    "sync-knowledge": "tsx scripts/sync-knowledge.ts",
+    "check:lock-race": "tsx scripts/check-lock-race.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
