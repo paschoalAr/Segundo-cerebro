@@ -41,7 +41,7 @@ export async function dropTaskAction(formData: FormData) {
 import { getValidAccessToken } from '@/src/google/token';
 import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
 import { insertEvent, toGCalEventTime } from '@/src/google/calendar';
-import { insertBlockDraft, setBlockGcalEventId } from '@/src/plan/blocks-repo';
+import { insertBlockDraft, setBlockGcalEventId, deleteBlockRow } from '@/src/plan/blocks-repo';
 import { gcalColorId, BLOCK_KINDS, type BlockKind } from '@/src/plan/categories';
 import { deriveBlockSector } from '@/src/sectors/derive';
 import { getTask } from '@/src/tasks/repo';
@@ -77,16 +77,21 @@ export async function taskToBlockAction(formData: FormData) {
     null,
   );
 
-  const accessToken = await getValidAccessToken();
-  const cerebroId = await getCerebroCalendarId(accessToken);
-  const eventId = await insertEvent(accessToken, cerebroId, {
-    summary: task.title,
-    start: toGCalEventTime(range.start),
-    end: toGCalEventTime(range.end),
-    blockId,
-    colorId: gcalColorId(kind),
-  });
-  await setBlockGcalEventId(blockId, eventId);
+  try {
+    const accessToken = await getValidAccessToken();
+    const cerebroId = await getCerebroCalendarId(accessToken);
+    const eventId = await insertEvent(accessToken, cerebroId, {
+      summary: task.title,
+      start: toGCalEventTime(range.start),
+      end: toGCalEventTime(range.end),
+      blockId,
+      colorId: gcalColorId(kind),
+    });
+    await setBlockGcalEventId(blockId, eventId);
+  } catch (err) {
+    await deleteBlockRow(blockId);
+    throw err;
+  }
 
   revalidateTaskScreens();
 }
