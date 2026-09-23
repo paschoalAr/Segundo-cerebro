@@ -90,3 +90,63 @@ describe('manual alterado desde o último run', () => {
     expect(buildSystemPrompt()[0].text).toContain('manual mudou');
   });
 });
+
+describe('setor no prompt', () => {
+  const base = {
+    manual: '# Manual',
+    knowledge: [] as never[],
+    today: new Date(2026, 8, 23),
+    weekStart: new Date(2026, 8, 21),
+    weekEnd: new Date(2026, 8, 27),
+    observations: [] as string[],
+    inboxItems: [] as never[],
+    answeredQuestions: [] as never[],
+    manualChangedSinceLastRun: false,
+  };
+
+  it('mostra o setor de cada fato', () => {
+    const [, variable] = buildUserContent({
+      ...base,
+      facts: [
+        { source: 'moodle', kind: 'deadline', title: 'Entrega TCC', date: new Date(2026, 8, 30), sector: 'estudos' },
+      ],
+      blocks: [],
+    });
+    expect(variable.text).toContain('{estudos}');
+    expect(variable.text).toContain('Entrega TCC');
+  });
+
+  it('mostra o setor de cada bloco', () => {
+    const [, variable] = buildUserContent({
+      ...base,
+      facts: [],
+      blocks: [
+        {
+          id: 7,
+          kind: 'study',
+          status: 'planned',
+          title: 'Estudar Redes',
+          start: new Date(2026, 8, 24, 9),
+          end: new Date(2026, 8, 24, 11),
+          sector: 'estudos',
+        },
+      ],
+    });
+    expect(variable.text).toContain('#7');
+    expect(variable.text).toContain('{estudos}');
+  });
+
+  it('linha sem setor aparece como {sem setor}, não some nem vira "null"', () => {
+    const [, variable] = buildUserContent({
+      ...base,
+      facts: [{ source: 'gcal', kind: 'event', title: 'Algo solto', date: new Date(2026, 8, 24), sector: null }],
+      blocks: [],
+    });
+    expect(variable.text).toContain('{sem setor}');
+    expect(variable.text).not.toContain('{null}');
+  });
+
+  it('o system prompt deixa claro que a Claude não escolhe setor', () => {
+    expect(buildSystemPrompt()[0].text).toContain('você não escolhe nem altera setor');
+  });
+});

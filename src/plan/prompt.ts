@@ -24,14 +24,16 @@ Categorias de bloco (use exatamente um destes valores em blocks.create[].kind). 
 
 Na dúvida entre exam e study: o horário oficial da prova é exam; qualquer bloco que o Arthur usa pra se preparar é study. Na dúvida entre assignment e study: produzir a entrega é assignment; estudar o conteúdo é study.
 
+Cada fato e cada bloco vem com uma etiqueta de setor entre chaves — {estudos}, {carreira}, {financas}, {saude}, {projetos}, {pessoal} ou {sem setor}. O setor é calculado pelo sistema a partir da fonte e da categoria: você não escolhe nem altera setor. Use a etiqueta só pra enxergar o equilíbrio da semana — se uma área da vida sumiu por completo, isso pode valer um conflict ou uma pergunta.
+
 Todas as datas (inbox.date, inbox.end_date, blocks.*.start, blocks.*.end) devem ser strings ISO 8601 completas com o fuso -03:00 (horário de Brasília), por exemplo "2026-09-25T14:00:00-03:00".`;
 
 export function buildSystemPrompt(): { type: 'text'; text: string; cache_control: { type: 'ephemeral' } }[] {
   return [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }];
 }
 
-type Fact = { source: string; kind: string; title: string; date: Date };
-type Block = { id: number; kind: string; status: string; title: string; start: Date; end: Date };
+type Fact = { source: string; kind: string; title: string; date: Date; sector: string | null };
+type Block = { id: number; kind: string; status: string; title: string; start: Date; end: Date; sector: string | null };
 type InboxItem = { id: number; text: string };
 type AnsweredQuestion = { text: string; answer: string | null };
 type KnowledgeDoc = { title: string; content: string };
@@ -54,6 +56,10 @@ function fmt(d: Date): string {
   return d.toLocaleString('pt-BR');
 }
 
+function sectorTag(sector: string | null): string {
+  return `{${sector ?? 'sem setor'}}`;
+}
+
 export function buildUserContent(
   input: UserContentInput,
 ): [
@@ -73,11 +79,15 @@ export function buildUserContent(
     `Semana: ${input.weekStart.toLocaleDateString('pt-BR')} a ${input.weekEnd.toLocaleDateString('pt-BR')}`,
     '',
     'Fatos (próximas semanas):',
-    input.facts.map((f) => `- [${f.source}/${f.kind}] ${f.title} — ${fmt(f.date)}`).join('\n') || '(nenhum)',
+    input.facts.map((f) => `- [${f.source}/${f.kind}] ${sectorTag(f.sector)} ${f.title} — ${fmt(f.date)}`).join('\n') ||
+      '(nenhum)',
     '',
     'Blocos atuais no Cérebro:',
-    input.blocks.map((b) => `- #${b.id} [${b.kind}/${b.status}] ${b.title} — ${fmt(b.start)} a ${fmt(b.end)}`).join('\n') ||
-      '(nenhum)',
+    input.blocks
+      .map(
+        (b) => `- #${b.id} [${b.kind}/${b.status}] ${sectorTag(b.sector)} ${b.title} — ${fmt(b.start)} a ${fmt(b.end)}`,
+      )
+      .join('\n') || '(nenhum)',
     '',
     'Observações (o que o Arthur mudou manualmente):',
     input.observations.join('\n') || '(nenhuma)',
