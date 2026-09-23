@@ -25,6 +25,8 @@ export const knowledgeSource = pgEnum('knowledge_source', ['claude-memory', 'not
 export const runTrigger = pgEnum('run_trigger', ['cron', 'manual']);
 export const runStatus = pgEnum('run_status', ['running', 'ok', 'error']);
 export const sectorEnum = pgEnum('sector', SECTORS);
+export const taskStatus = pgEnum('task_status', ['open', 'done', 'dropped']);
+export const taskOrigin = pgEnum('task_origin', ['manual', 'motor']);
 
 export const planRuns = pgTable(
   'plan_runs',
@@ -82,6 +84,7 @@ export const planBlocks = pgTable(
   {
     id: serial('id').primaryKey(),
     factId: integer('fact_id').references(() => facts.id, { onDelete: 'set null' }),
+    taskId: integer('task_id').references(() => tasks.id, { onDelete: 'set null' }),
     title: text('title').notNull(),
     start: timestamp('start', { withTimezone: true }).notNull(),
     end: timestamp('end', { withTimezone: true }).notNull(),
@@ -112,6 +115,36 @@ export const questions = pgTable('questions', {
   status: questionStatus('status').notNull().default('open'),
   runId: integer('run_id').references(() => planRuns.id),
 });
+
+export const taskSuggestions = pgTable('task_suggestions', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  sector: sectorEnum('sector'),
+  due: timestamp('due', { withTimezone: true }),
+  reason: text('reason').notNull(),
+  fromQuestionId: integer('from_question_id').references(() => questions.id, { onDelete: 'set null' }),
+  status: suggestionStatus('status').notNull().default('pending'),
+  runId: integer('run_id').references(() => planRuns.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const tasks = pgTable(
+  'tasks',
+  {
+    id: serial('id').primaryKey(),
+    title: text('title').notNull(),
+    sector: sectorEnum('sector'),
+    /** Prazo, não hora de compromisso: tarefa não tem horário. */
+    due: timestamp('due', { withTimezone: true }),
+    status: taskStatus('status').notNull().default('open'),
+    origin: taskOrigin('origin').notNull().default('manual'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    doneAt: timestamp('done_at', { withTimezone: true }),
+    fromSuggestionId: integer('from_suggestion_id').references(() => taskSuggestions.id, { onDelete: 'set null' }),
+  },
+  (t) => [index('tasks_status_idx').on(t.status), index('tasks_sector_idx').on(t.sector)],
+);
 
 export const manual = pgTable('manual', {
   id: integer('id').primaryKey(),
