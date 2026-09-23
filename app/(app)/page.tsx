@@ -1,21 +1,52 @@
 import Link from 'next/link';
-import { NAV_ITEMS } from '@/src/nav/items';
+import { SECTOR_LABELS } from '@/src/sectors/sector';
+import { sectorOverview } from '@/src/sectors/repo';
+import { getWeekRange } from '@/src/facts/week';
+import { getCollectionWindow } from '@/src/facts/window';
 
-export default function HubPage() {
-  const sectors = NAV_ITEMS.filter((it) => it.group === 'setor');
+export default async function HubPage() {
+  const now = new Date();
+  const { start, end } = getWeekRange(now);
+  const { end: horizonEnd } = getCollectionWindow(now);
+  const summaries = await sectorOverview(start, end, horizonEnd, now);
 
   return (
     <>
       <h1>Setores</h1>
-      <p className="muted">Cada setor ainda não tem fonte conectada — chega na próxima etapa.</p>
-      <div className="row" style={{ alignItems: 'stretch' }}>
-        {sectors.map((s) => (
-          <Link key={s.slug} href={s.href} className="card" style={{ flex: '1 1 240px', textDecoration: 'none' }}>
-            <strong style={{ fontFamily: 'var(--font-display)' }}>{s.label}</strong>
-            <p className="muted" style={{ marginBottom: 0 }}>este setor ainda não tem fonte conectada</p>
+
+      <div className="sector-grid">
+        {summaries.map((s) => (
+          <Link key={s.sector} href={`/setor/${s.sector}`} className="card sector-card">
+            <strong className="sector-card-name">{SECTOR_LABELS[s.sector]}</strong>
+
+            {s.blockCount === 0 && s.factCount === 0 ? (
+              <p className="muted sector-card-empty">nada deste setor nesta semana</p>
+            ) : (
+              <>
+                <div className="sector-card-count">
+                  <span className="sector-card-number">{s.blockCount}</span>
+                  <span className="muted">{s.blockCount === 1 ? 'bloco na semana' : 'blocos na semana'}</span>
+                </div>
+                {s.next ? (
+                  <p className="sector-card-next">
+                    <span className="muted">próximo: </span>
+                    {s.next.title} <span className="mono muted">{s.next.date.toLocaleDateString('pt-BR')}</span>
+                  </p>
+                ) : (
+                  <p className="muted sector-card-next">sem compromisso no horizonte</p>
+                )}
+              </>
+            )}
           </Link>
         ))}
       </div>
+
+      {(summaries.unassigned.blockCount > 0 || summaries.unassigned.factCount > 0) && (
+        <p className="muted">
+          Sem setor: {summaries.unassigned.factCount} fato(s) e {summaries.unassigned.blockCount} bloco(s). Calendário
+          do Google fora do <code>SECTOR_CALENDAR_MAP</code> e item de inbox caem aqui.
+        </p>
+      )}
     </>
   );
 }

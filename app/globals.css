@@ -281,3 +281,51 @@ textarea, input[type="text"] {
   .wheel-capture,
   .wheel-collapsed { display: none; }
 }
+
+/* Hub de setores */
+
+.mono { font-family: var(--font-mono); }
+
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.sector-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  margin-bottom: 0;
+}
+
+.sector-card:hover {
+  border-color: var(--bat);
+}
+
+.sector-card-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.sector-card-count {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.sector-card-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--bat);
+}
+
+.sector-card-empty,
+.sector-card-next {
+  margin: 0;
+  font-size: 14px;
+}
