@@ -11,6 +11,7 @@ export type BlockInput = {
   kind: BlockKind;
   sector: Sector | null;
   factId: number | null;
+  taskId: number | null;
   reason: string;
 };
 
@@ -35,7 +36,7 @@ export async function getBlock(id: number) {
 }
 
 /** Insere o bloco sem gcalEventId ainda — o id gerado aqui vira extendedProperties.private.block_id no evento. */
-export async function insertBlockDraft(input: BlockInput, runId: number): Promise<number> {
+export async function insertBlockDraft(input: BlockInput, runId: number | null): Promise<number> {
   const [row] = await db
     .insert(planBlocks)
     .values({ ...input, createdRunId: runId, updatedRunId: runId })

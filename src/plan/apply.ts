@@ -83,6 +83,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
         kind: create.kind,
         sector: deriveBlockSector(create.kind, factSector),
         factId,
+        taskId: null,
         reason: create.reason,
       },
       runId,
