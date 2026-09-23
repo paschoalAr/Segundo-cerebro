@@ -1,0 +1,1 @@
+ALTER TABLE "plan_runs" ADD COLUMN "conflicts" jsonb DEFAULT '[]'::jsonb;
