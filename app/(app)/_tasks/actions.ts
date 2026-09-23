@@ -3,6 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { completeTask, createTask, dropTask } from '@/src/tasks/repo';
 import { isSector } from '@/src/sectors/sector';
+import { getValidAccessToken } from '@/src/google/token';
+import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
+import { insertEvent, toGCalEventTime } from '@/src/google/calendar';
+import { insertBlockDraft, setBlockGcalEventId, deleteBlockRow } from '@/src/plan/blocks-repo';
+import { gcalColorId, BLOCK_KINDS, type BlockKind } from '@/src/plan/categories';
+import { deriveBlockSector } from '@/src/sectors/derive';
+import { getTask } from '@/src/tasks/repo';
+import { parseBlockRange } from '@/src/tasks/task';
 
 function revalidateTaskScreens() {
   revalidatePath('/semana');
@@ -37,15 +45,6 @@ export async function dropTaskAction(formData: FormData) {
   await dropTask(Number(formData.get('id')));
   revalidateTaskScreens();
 }
-
-import { getValidAccessToken } from '@/src/google/token';
-import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
-import { insertEvent, toGCalEventTime } from '@/src/google/calendar';
-import { insertBlockDraft, setBlockGcalEventId, deleteBlockRow } from '@/src/plan/blocks-repo';
-import { gcalColorId, BLOCK_KINDS, type BlockKind } from '@/src/plan/categories';
-import { deriveBlockSector } from '@/src/sectors/derive';
-import { getTask } from '@/src/tasks/repo';
-import { parseBlockRange } from '@/src/tasks/task';
 
 /**
  * Reserva horário pra uma tarefa: cria um `plan_block` normal, com evento no calendário
