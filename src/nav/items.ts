@@ -1,3 +1,5 @@
+import { SECTORS, SECTOR_LABELS } from '@/src/sectors/sector';
+
 export type NavGroup = 'setor' | 'ferramenta';
 
 export type NavItem = {
@@ -7,13 +9,15 @@ export type NavItem = {
   group: NavGroup;
 };
 
+const SECTOR_ITEMS: NavItem[] = SECTORS.map((slug) => ({
+  slug,
+  href: `/setor/${slug}`,
+  label: SECTOR_LABELS[slug],
+  group: 'setor',
+}));
+
 export const NAV_ITEMS: NavItem[] = [
-  { slug: 'estudos', href: '/setor/estudos', label: 'Estudos', group: 'setor' },
-  { slug: 'carreira', href: '/setor/carreira', label: 'Carreira', group: 'setor' },
-  { slug: 'financas', href: '/setor/financas', label: 'Finanças', group: 'setor' },
-  { slug: 'saude', href: '/setor/saude', label: 'Saúde', group: 'setor' },
-  { slug: 'projetos', href: '/setor/projetos', label: 'Projetos', group: 'setor' },
-  { slug: 'pessoal', href: '/setor/pessoal', label: 'Pessoal', group: 'setor' },
+  ...SECTOR_ITEMS,
   { slug: 'semana', href: '/semana', label: 'Semana', group: 'ferramenta' },
   { slug: 'inbox', href: '/inbox', label: 'Inbox', group: 'ferramenta' },
   { slug: 'pendencias', href: '/pendencias', label: 'Pendências', group: 'ferramenta' },
