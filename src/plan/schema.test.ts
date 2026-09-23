@@ -29,6 +29,22 @@ describe('PlanOutputSchema', () => {
     expect(PlanOutputSchema.safeParse(bad).success).toBe(false);
   });
 
+  it('aceita as categorias novas de trabalho, prova e entrega', () => {
+    for (const kind of ['work', 'class', 'exam', 'assignment', 'personal', 'travel']) {
+      const ok = JSON.parse(JSON.stringify(VALID));
+      ok.blocks.create[0].kind = kind;
+      expect(PlanOutputSchema.safeParse(ok).success, kind).toBe(true);
+    }
+  });
+
+  it('rejeita os kinds antigos que sairam do vocabulario', () => {
+    for (const kind of ['task', 'buffer']) {
+      const bad = JSON.parse(JSON.stringify(VALID));
+      bad.blocks.create[0].kind = kind;
+      expect(PlanOutputSchema.safeParse(bad).success, kind).toBe(false);
+    }
+  });
+
   it('rejeita interpretation.type desconhecido', () => {
     const bad = JSON.parse(JSON.stringify(VALID));
     bad.inbox[0].interpretation.type = 'evento';

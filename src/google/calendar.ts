@@ -85,7 +85,7 @@ export function toGCalEventTime(date: Date): GCalEventTime {
 export async function insertEvent(
   accessToken: string,
   calendarId: string,
-  event: { summary: string; start: GCalEventTime; end: GCalEventTime; blockId: number },
+  event: { summary: string; start: GCalEventTime; end: GCalEventTime; blockId: number; colorId: string },
 ): Promise<string> {
   const res = await fetch(`${CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events`, {
     method: 'POST',
@@ -94,6 +94,7 @@ export async function insertEvent(
       summary: event.summary,
       start: event.start,
       end: event.end,
+      colorId: event.colorId,
       extendedProperties: { private: { block_id: String(event.blockId) } },
     }),
   });
@@ -107,14 +108,14 @@ export async function patchEvent(
   accessToken: string,
   calendarId: string,
   eventId: string,
-  event: { summary: string; start: GCalEventTime; end: GCalEventTime },
+  event: { summary: string; start: GCalEventTime; end: GCalEventTime; colorId: string },
 ): Promise<void> {
   const res = await fetch(
     `${CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
     {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ summary: event.summary, start: event.start, end: event.end }),
+      body: JSON.stringify({ summary: event.summary, start: event.start, end: event.end, colorId: event.colorId }),
     },
   );
   if (res.status === 404) return;

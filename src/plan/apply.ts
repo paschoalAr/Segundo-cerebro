@@ -1,5 +1,6 @@
 import { getValidAccessToken } from '@/src/google/token';
 import { deleteEvent, insertEvent, patchEvent, toGCalEventTime } from '@/src/google/calendar';
+import { gcalColorId } from './categories';
 import { getCerebroCalendarId } from '@/src/google/cerebro-calendar';
 import { deleteBlockRow, getBlock, insertBlockDraft, setBlockGcalEventId, updateBlock } from './blocks-repo';
 import { insertFact } from '@/src/facts/repo';
@@ -59,6 +60,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
         summary: upd.title,
         start: toGCalEventTime(new Date(upd.start)),
         end: toGCalEventTime(new Date(upd.end)),
+        colorId: gcalColorId(block.kind),
       });
     }
     await updateBlock(upd.id, { title: upd.title, start: new Date(upd.start), end: new Date(upd.end), reason: upd.reason }, runId);
@@ -81,6 +83,7 @@ export async function applyPlanOutput(output: PlanOutput, runId: number): Promis
       start: toGCalEventTime(new Date(create.start)),
       end: toGCalEventTime(new Date(create.end)),
       blockId: id,
+      colorId: gcalColorId(create.kind),
     });
     await setBlockGcalEventId(id, eventId);
   }

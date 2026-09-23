@@ -11,6 +11,15 @@ describe('buildSystemPrompt', () => {
     expect(text).toContain('Regras de planejamento');
     expect(blocks[0].cache_control).toEqual({ type: 'ephemeral' });
   });
+
+  it('explica cada categoria de bloco para a Claude escolher certo', () => {
+    const texto = buildSystemPrompt()[0].text;
+    for (const kind of ['work', 'class', 'exam', 'assignment', 'study', 'personal', 'travel']) {
+      expect(texto, kind).toContain(kind);
+    }
+    expect(texto).toContain('Galapos');
+    expect(texto).not.toContain('buffer');
+  });
 });
 
 describe('buildUserContent', () => {

@@ -1,3 +1,4 @@
+import { BLOCK_KINDS } from '@/src/plan/categories';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -14,7 +15,7 @@ import {
 export const inboxStatus = pgEnum('inbox_status', ['new', 'processed', 'ignored']);
 export const factKind = pgEnum('fact_kind', ['event', 'deadline', 'task', 'info']);
 export const factSource = pgEnum('fact_source', ['moodle', 'gcal', 'outlook', 'inbox']);
-export const blockKind = pgEnum('block_kind', ['study', 'task', 'travel', 'buffer']);
+export const blockKind = pgEnum('block_kind', BLOCK_KINDS);
 export const blockStatus = pgEnum('block_status', ['planned', 'done', 'skipped']);
 export const questionStatus = pgEnum('question_status', ['open', 'answered', 'dismissed']);
 export const suggestionStatus = pgEnum('suggestion_status', ['pending', 'accepted', 'rejected']);

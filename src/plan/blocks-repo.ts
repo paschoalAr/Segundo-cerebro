@@ -1,12 +1,13 @@
 import { and, eq, gte, isNotNull, lte } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { planBlocks } from '@/src/db/schema';
+import type { BlockKind } from './categories';
 
 export type BlockInput = {
   title: string;
   start: Date;
   end: Date;
-  kind: 'study' | 'task' | 'travel' | 'buffer';
+  kind: BlockKind;
   factId: number | null;
   reason: string;
 };

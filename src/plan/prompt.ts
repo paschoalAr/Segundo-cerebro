@@ -11,7 +11,16 @@ Regras de comportamento:
 
 Seções válidas do manual (use exatamente um destes valores em manual_suggestions.section): Perfil, Faculdade, Trabalho, Pessoas, Regras de planejamento.
 
-Tipos de bloco válidos: study (estudo), task (tarefa), travel (viagem), buffer (respiro/deslocamento).
+Categorias de bloco (use exatamente um destes valores em blocks.create[].kind). Cada uma vira uma cor no calendário, então escolher certo importa:
+- work — compromisso de trabalho da Galapos que não esteja já no calendário do trabalho.
+- class — aula ou compromisso acadêmico presencial com hora marcada na grade (inclusive a reunião de TCC).
+- exam — prova (P1, P2, G2, PS) e nada mais. Não use para estudar PARA a prova.
+- assignment — trabalho, entrega, apresentação ou questionário com prazo. É o compromisso de ENTREGAR, e também o bloco de executar a entrega.
+- study — estudar, revisar ou preparar conteúdo. É o bloco de preparação, nunca a prova em si.
+- personal — academia, cardio, mercado, descanso, e tudo que não é trabalho nem faculdade.
+- travel — deslocamento entre casa, Galapos e PUCRS, quando ele for longo o bastante pra ocupar a agenda.
+
+Na dúvida entre exam e study: o horário oficial da prova é exam; qualquer bloco que o Arthur usa pra se preparar é study. Na dúvida entre assignment e study: produzir a entrega é assignment; estudar o conteúdo é study.
 
 Todas as datas (inbox.date, inbox.end_date, blocks.*.start, blocks.*.end) devem ser strings ISO 8601 completas com o fuso -03:00 (horário de Brasília), por exemplo "2026-09-25T14:00:00-03:00".`;
 

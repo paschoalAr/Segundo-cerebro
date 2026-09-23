@@ -10,10 +10,13 @@ import { markBlockDone, markBlockSkipped, refreshFacts } from './actions';
 
 const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 const BLOCK_COLOR: Record<string, string> = {
+  work: 'var(--block-work)',
+  class: 'var(--block-class)',
+  exam: 'var(--block-exam)',
+  assignment: 'var(--block-assignment)',
   study: 'var(--block-study)',
-  task: 'var(--block-task)',
+  personal: 'var(--block-personal)',
   travel: 'var(--block-travel)',
-  buffer: 'var(--block-buffer)',
 };
 
 function dayKey(d: Date): string {
@@ -127,7 +130,7 @@ export default async function SemanaPage({
                 </div>
               ) : (
                 <div key={`block-${item.id}`} className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ color: BLOCK_COLOR[item.blockKind] ?? 'var(--block-buffer)' }}>●</span>
+                  <span style={{ color: BLOCK_COLOR[item.blockKind] ?? 'var(--block-personal)' }}>●</span>
                   <div style={{ flex: 1 }}>
                     <div>
                       {item.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {item.title}{' '}

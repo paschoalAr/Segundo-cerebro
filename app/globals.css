@@ -7,10 +7,14 @@
 
   /* Cor só nos blocos (spec §5) */
   --block-real: #3a3a3a;
-  --block-study: #2f6fed;
-  --block-task: #e8862a;
-  --block-travel: #7d4fd1;
-  --block-buffer: #bdbdbd;
+  /* Espelham as cores do Google Calendar usadas em src/plan/categories.ts. */
+  --block-work: #039be5;
+  --block-class: #0b8043;
+  --block-exam: #d50000;
+  --block-assignment: #f4511e;
+  --block-study: #e67c73;
+  --block-personal: #f6bf26;
+  --block-travel: #616161;
 }
 
 * { box-sizing: border-box; }

@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { BLOCK_KINDS } from './categories';
 
 const FactKind = z.enum(['event', 'deadline', 'task', 'info']);
-const BlockKind = z.enum(['study', 'task', 'travel', 'buffer']);
+const BlockKind = z.enum(BLOCK_KINDS);
 
 export const PlanOutputSchema = z.object({
   inbox: z.array(
