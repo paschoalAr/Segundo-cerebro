@@ -69,6 +69,16 @@ export async function findRunningRun() {
   });
 }
 
-export async function findLastRun() {
-  return db.query.planRuns.findFirst({ orderBy: desc(planRuns.startedAt) });
+/**
+ * O run ANTERIOR ao que está rodando agora.
+ *
+ * Aceita `beforeRunId` porque o motor cria o run e só depois pergunta "o que mudou desde o
+ * último?" — sem o filtro, a resposta era o próprio run recém-criado, a janela virava "de
+ * agora até agora" e nenhuma resposta do Arthur jamais entrava no prompt.
+ */
+export async function findLastRun(beforeRunId?: number) {
+  return db.query.planRuns.findFirst({
+    where: beforeRunId === undefined ? undefined : lt(planRuns.id, beforeRunId),
+    orderBy: desc(planRuns.id),
+  });
 }

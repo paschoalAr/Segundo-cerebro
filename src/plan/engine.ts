@@ -33,7 +33,7 @@ export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number>
     if (!collected.ok) throw new Error(collected.error ?? 'Falha ao coletar fontes');
 
     const { start, end } = getPromptWindow();
-    const lastRun = await findLastRun();
+    const lastRun = await findLastRun(runId);
     const since = lastRun?.startedAt ?? new Date(0);
 
     const [manual, knowledge, facts, blocks, observations, inboxItems, answered] = await Promise.all([
@@ -59,6 +59,7 @@ export async function runPlanEngine(trigger: 'cron' | 'manual'): Promise<number>
       observations,
       inboxItems,
       answeredQuestions: answered,
+      manualChangedSinceLastRun: lastRun !== undefined && manual.updatedAt > lastRun.startedAt,
     });
 
     // cache_control em buildSystemPrompt/buildUserContent é pra API da Anthropic — o

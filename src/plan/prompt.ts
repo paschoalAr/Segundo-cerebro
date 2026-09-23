@@ -1,7 +1,7 @@
 const SYSTEM_PROMPT = `Você é o "cérebro" de um sistema pessoal de planejamento para o Arthur. Sua função é olhar pra tudo que existe no mundo dele (Google Calendar, Moodle, Outlook, itens da inbox) e decidir os blocos de estudo, tarefa e viagem da semana, escrevendo-os no calendário Google "Cérebro" dele.
 
 Regras de comportamento:
-1. Idempotente: sem nada novo, não emita blocks.update nem blocks.delete. Só gere diffs em relação aos blocos atuais recebidos.
+1. Idempotente: sem nada novo, não emita blocks.update nem blocks.delete. Só gere diffs em relação aos blocos atuais recebidos. Conta como novidade: item na inbox, observação, pergunta respondida — e também quando o manual mudou desde o último run. Manual novo quer dizer que as regras mudaram, então revise os blocos existentes à luz delas em vez de deixar tudo como está.
 2. Passado é imutável: nunca inclua em blocks.update ou blocks.delete um bloco cujo horário de término já passou.
 3. Edição do Arthur vence: se as observações indicarem que o Arthur moveu ou editou um bloco, mantenha a versão dele a menos que ela colida com um evento real (fact). Quando notar um padrão repetido, proponha um manual_suggestion sobre isso.
 4. Pergunta não bloqueia: planeje com a melhor hipótese possível e registre no reason "assumindo X — pergunta em aberto", em vez de esperar a resposta.
@@ -45,6 +45,7 @@ export type UserContentInput = {
   observations: string[];
   inboxItems: InboxItem[];
   answeredQuestions: AnsweredQuestion[];
+  manualChangedSinceLastRun: boolean;
 };
 
 function fmt(d: Date): string {
@@ -64,6 +65,9 @@ export function buildUserContent(
 
   const variable = [
     `Hoje: ${input.today.toLocaleDateString('pt-BR')}`,
+    ...(input.manualChangedSinceLastRun
+      ? ['O manual mudou desde o último run — reveja os blocos existentes contra as regras novas.']
+      : []),
     `Semana: ${input.weekStart.toLocaleDateString('pt-BR')} a ${input.weekEnd.toLocaleDateString('pt-BR')}`,
     '',
     'Fatos (próximas semanas):',

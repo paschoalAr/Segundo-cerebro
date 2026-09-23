@@ -34,6 +34,7 @@ describe('buildUserContent', () => {
     observations: [] as string[],
     inboxItems: [] as never[],
     answeredQuestions: [] as never[],
+    manualChangedSinceLastRun: false,
   };
 
   it('bloco estável contém o manual e o conhecimento, com cache_control', () => {
@@ -52,5 +53,34 @@ describe('buildUserContent', () => {
   it('lista vazia de facts/blocos/observações não quebra e mostra placeholder', () => {
     const content = buildUserContent(base);
     expect(content[1].text).toMatch(/\(nenhum/);
+  });
+});
+
+describe('manual alterado desde o último run', () => {
+  const base = {
+    manual: '# Manual',
+    knowledge: [] as never[],
+    today: new Date(2026, 8, 23),
+    weekStart: new Date(2026, 8, 21),
+    weekEnd: new Date(2026, 8, 27),
+    facts: [] as never[],
+    blocks: [] as never[],
+    observations: [] as string[],
+    inboxItems: [] as never[],
+    answeredQuestions: [] as never[],
+  };
+
+  it('avisa no bloco variável quando o manual mudou', () => {
+    const [, variable] = buildUserContent({ ...base, manualChangedSinceLastRun: true });
+    expect(variable.text).toContain('O manual mudou desde o último run');
+  });
+
+  it('não inventa o aviso quando o manual está igual', () => {
+    const [, variable] = buildUserContent({ ...base, manualChangedSinceLastRun: false });
+    expect(variable.text).not.toContain('O manual mudou');
+  });
+
+  it('o system prompt trata manual alterado como novidade', () => {
+    expect(buildSystemPrompt()[0].text).toContain('manual mudou');
   });
 });
