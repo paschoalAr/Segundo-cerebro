@@ -9,6 +9,8 @@ import { addWeeks, formatWeekLabel, getWeekRange } from '@/src/facts/week';
 import { markBlockDone, markBlockSkipped, refreshFacts } from './actions';
 import type { GridItem } from '@/src/semana/grid';
 import { WeekGrid } from './week-grid';
+import { listOpenTasks } from '@/src/tasks/repo';
+import { TasksPanel } from '../_tasks/panel';
 
 const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -32,11 +34,12 @@ export default async function SemanaPage({
   const base = addWeeks(new Date(), offset);
   const { start, end } = getWeekRange(base);
 
-  const [facts, blocks, statusRow, lastRun] = await Promise.all([
+  const [facts, blocks, statusRow, lastRun, openTasks] = await Promise.all([
     listFactsInRange(start, end),
     listBlocksInRange(start, end),
     db.query.sourcesCache.findFirst({ where: eq(sourcesCache.source, 'collect_status') }),
     findLastRun(),
+    listOpenTasks(),
   ]);
   const status = statusRow?.payload as CollectResult | undefined;
 
@@ -128,6 +131,8 @@ export default async function SemanaPage({
         <strong>{formatWeekLabel(start, end)}</strong>
         <a href={`/semana?w=${offset + 1}`}>próxima &rarr;</a>
       </div>
+
+      <TasksPanel tasks={openTasks} now={new Date()} />
 
       <WeekGrid weekStart={start} items={gridItems} now={now} />
 

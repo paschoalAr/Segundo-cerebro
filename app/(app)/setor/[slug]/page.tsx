@@ -3,6 +3,8 @@ import { isSector, SECTOR_LABELS } from '@/src/sectors/sector';
 import { listSectorAgenda } from '@/src/sectors/repo';
 import { getCollectionWindow } from '@/src/facts/window';
 import { markBlockDone, markBlockSkipped } from '../../semana/actions';
+import { listOpenTasksBySector } from '@/src/tasks/repo';
+import { TasksPanel } from '../../_tasks/panel';
 
 const WEEKDAYS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
@@ -27,7 +29,10 @@ export default async function SetorPage({ params }: { params: Promise<{ slug: st
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
 
-  const agenda = await listSectorAgenda(slug, start, end);
+  const [agenda, sectorTasks] = await Promise.all([
+    listSectorAgenda(slug, start, end),
+    listOpenTasksBySector(slug),
+  ]);
 
   const items: Item[] = [
     ...agenda.facts.map((f): Item => ({
@@ -57,6 +62,8 @@ export default async function SetorPage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <h1>{SECTOR_LABELS[slug]}</h1>
+
+      <TasksPanel tasks={sectorTasks} now={now} fixedSector={slug} />
 
       {items.length === 0 ? (
         <p className="muted">
