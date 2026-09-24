@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_BLOCK_MINUTES, MIN_BLOCK_MINUTES, parseBlockRange, sanitizeTaskId, sortTasks, taskUrgency } from './task';
+import {
+  MAX_BLOCK_MINUTES,
+  MIN_BLOCK_MINUTES,
+  groupTasksByUrgencyBucket,
+  parseBlockRange,
+  sanitizeTaskId,
+  sortTasks,
+  taskUrgency,
+} from './task';
 
 const at = (day: number, h = 12, m = 0) => new Date(2026, 8, day, h, m, 0, 0);
 const NOW = at(23, 10); // quarta 23/09/2026, 10h
@@ -72,6 +80,43 @@ describe('sortTasks', () => {
 
   it('lista vazia devolve lista vazia', () => {
     expect(sortTasks([], NOW)).toEqual([]);
+  });
+});
+
+describe('groupTasksByUrgencyBucket', () => {
+  it('separa overdue em atrasadas, today/soon/later em estaSemana e sem prazo em semPrazo', () => {
+    const overdue = task({ id: 1, due: at(22, 23, 59) });
+    const today = task({ id: 2, due: at(23, 8) });
+    const soon = task({ id: 3, due: at(24, 9) });
+    const later = task({ id: 4, due: at(30, 9) });
+    const none = task({ id: 5 });
+
+    const out = groupTasksByUrgencyBucket([later, none, soon, overdue, today], NOW);
+
+    expect(out.atrasadas.map((t) => t.id)).toEqual([1]);
+    expect(out.estaSemana.map((t) => t.id)).toEqual([2, 3, 4]);
+    expect(out.semPrazo.map((t) => t.id)).toEqual([5]);
+  });
+
+  it('preserva dentro de cada grupo a ordenação de sortTasks', () => {
+    const out = groupTasksByUrgencyBucket(
+      [
+        task({ id: 9, due: at(24) }),
+        task({ id: 2, due: at(24) }),
+        task({ id: 1, createdAt: at(1) }),
+        task({ id: 3, createdAt: at(10) }),
+      ],
+      NOW,
+    );
+    expect(out.estaSemana.map((t) => t.id)).toEqual([2, 9]);
+    expect(out.semPrazo.map((t) => t.id)).toEqual([3, 1]);
+  });
+
+  it('seções vazias voltam como array vazio', () => {
+    const out = groupTasksByUrgencyBucket([task({ id: 1 })], NOW);
+    expect(out.atrasadas).toEqual([]);
+    expect(out.estaSemana).toEqual([]);
+    expect(out.semPrazo.map((t) => t.id)).toEqual([1]);
   });
 });
 

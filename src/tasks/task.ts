@@ -52,6 +52,25 @@ export function sortTasks<T extends SortableTask>(tasks: T[], now: Date): T[] {
   });
 }
 
+/**
+ * Três grupos do painel: atrasada, "esta semana" (hoje/logo/mais tarde — o Figma só tem
+ * três seções, então "daqui a 2 semanas" cai no mesmo balde de "later") e sem prazo.
+ * Ordena com `sortTasks` antes de particionar pra manter a ordem dentro de cada grupo.
+ */
+export function groupTasksByUrgencyBucket<T extends SortableTask>(
+  tasks: T[],
+  now: Date,
+): { atrasadas: T[]; estaSemana: T[]; semPrazo: T[] } {
+  const groups = { atrasadas: [] as T[], estaSemana: [] as T[], semPrazo: [] as T[] };
+  for (const t of sortTasks(tasks, now)) {
+    const urgency = taskUrgency(t, now);
+    if (urgency === 'overdue') groups.atrasadas.push(t);
+    else if (urgency === 'none') groups.semPrazo.push(t);
+    else groups.estaSemana.push(t);
+  }
+  return groups;
+}
+
 export type BlockRangeResult = { ok: true; start: Date; end: Date } | { ok: false; error: string };
 
 /**
