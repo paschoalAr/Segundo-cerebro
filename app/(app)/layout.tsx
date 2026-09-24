@@ -1,5 +1,5 @@
 import { signOut } from '@/auth';
-import { Wheel } from './wheel';
+import { Sidebar } from './sidebar';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const logout = (
@@ -18,9 +18,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <Wheel />
+      <Sidebar />
       {logout}
-      <main className="container">{children}</main>
+      <main className="container sidebar-content">{children}</main>
     </>
   );
 }
