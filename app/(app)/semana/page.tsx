@@ -108,84 +108,117 @@ export default async function SemanaPage({
         </form>
       </div>
 
-      {status?.error && <p className="card">Última coleta falhou: {status.error}</p>}
-      {status?.warning && <p className="muted">{status.warning}</p>}
-
-      {lastRun && (
-        <p className="muted">
-          Último planejamento: {lastRun.startedAt.toLocaleString('pt-BR')} · {lastRun.trigger} · {lastRun.status}
-          {lastRun.summary ? ` · ${lastRun.summary.split('\n')[0]}` : ''}
-          {' · roda automaticamente ao logar no Windows, ou na mão com scripts/run-plan-local.ts'}
-        </p>
-      )}
-      {lastRun?.error && <p className="card">Último planejamento falhou: {lastRun.error}</p>}
-      {conflicts.map((c, i) => (
-        <p key={i} className="card">
-          {c.severity === 'warn' ? '⚠️ ' : ''}
-          {c.text}
-        </p>
-      ))}
-
       <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
         <a href={`/semana?w=${offset - 1}`}>&larr; anterior</a>
         <strong>{formatWeekLabel(start, end)}</strong>
         <a href={`/semana?w=${offset + 1}`}>próxima &rarr;</a>
       </div>
 
-      <TasksPanel tasks={openTasks} now={new Date()} />
+      <div className="wk-toggle row" style={{ gap: 8, marginBottom: 12 }}>
+        <a href="/semana?w=0">Hoje</a>
+        <a href={`/semana?w=${offset}`} aria-current="page" className="wk-toggle-active">Semana</a>
+        <button type="button" disabled title="em breve">Dia</button>
+        <button type="button" disabled title="em breve">Mês</button>
+      </div>
 
-      <WeekGrid weekStart={start} items={gridItems} now={now} />
+      <div className="wk-layout">
+        <WeekGrid weekStart={start} items={gridItems} now={now} />
+        <TasksPanel tasks={openTasks} now={new Date()} />
+      </div>
 
-      <h2 className="wk-list-title">Detalhes do dia</h2>
+      <div className="wk-legend row" style={{ gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+        <span className="wk-legend-item">
+          <span className="wk-legend-swatch" style={{ background: 'var(--bat-tint)', borderLeftColor: 'var(--bat)' }} />
+          bloco do motor
+        </span>
+        <span className="wk-legend-item">
+          <span className="wk-legend-swatch" style={{ background: 'var(--raised)', borderLeftColor: 'var(--line)' }} />
+          fato real (Moodle, Calendar)
+        </span>
+        <span className="wk-legend-item">
+          <span className="wk-legend-swatch" style={{ background: 'var(--raised)', borderLeftColor: 'var(--alert)' }} />
+          prova / entrega
+        </span>
+        <span className="wk-legend-item wk-legend-done">
+          <span className="wk-legend-swatch" style={{ background: 'var(--raised)', borderLeftColor: 'var(--line)' }} />
+          feito
+        </span>
+      </div>
 
-      {days.map((d) => {
-        const key = dayKey(d);
-        const dayItems = byDay.get(key) ?? [];
-        return (
-          <div key={key} className="card">
-            <strong>
-              {WEEKDAYS[(d.getDay() + 6) % 7]} · {String(d.getDate()).padStart(2, '0')}/
-              {String(d.getMonth() + 1).padStart(2, '0')}
-            </strong>
-            {dayItems.length === 0 && <p className="muted">Nada.</p>}
-            {dayItems.map((item) =>
-              item.kind === 'fact' ? (
-                <div key={`fact-${item.id}`} className="row" style={{ gap: 8 }}>
-                  <span style={{ color: 'var(--txt-dim)' }}>●</span>
-                  <span>
-                    {item.allDay ? '' : `${item.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · `}
-                    {item.title}
-                  </span>
-                  <span className="muted">({item.source})</span>
-                </div>
-              ) : (
-                <div key={`block-${item.id}`} className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ color: 'var(--bat)' }}>●</span>
-                  <div style={{ flex: 1 }}>
-                    <div>
-                      {item.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {item.title}{' '}
-                      <span className="muted">({item.status})</span>
-                    </div>
-                    <div className="muted">{item.reason}</div>
-                    {item.status === 'planned' && (
-                      <div className="row" style={{ gap: 4, marginTop: 4 }}>
-                        <form action={markBlockDone}>
-                          <input type="hidden" name="id" value={item.id} />
-                          <button type="submit" className="secondary">feito</button>
-                        </form>
-                        <form action={markBlockSkipped}>
-                          <input type="hidden" name="id" value={item.id} />
-                          <button type="submit" className="secondary">não feito</button>
-                        </form>
-                      </div>
-                    )}
+      <details className="wk-diagnostics" style={{ marginTop: 16 }}>
+        <summary>Diagnóstico do motor</summary>
+
+        {status?.error && <p className="card">Última coleta falhou: {status.error}</p>}
+        {status?.warning && <p className="muted">{status.warning}</p>}
+
+        {lastRun && (
+          <p className="muted">
+            Último planejamento: {lastRun.startedAt.toLocaleString('pt-BR')} · {lastRun.trigger} · {lastRun.status}
+            {lastRun.summary ? ` · ${lastRun.summary.split('\n')[0]}` : ''}
+            {' · roda automaticamente ao logar no Windows, ou na mão com scripts/run-plan-local.ts'}
+          </p>
+        )}
+        {lastRun?.error && <p className="card">Último planejamento falhou: {lastRun.error}</p>}
+        {conflicts.map((c, i) => (
+          <p key={i} className="card">
+            {c.severity === 'warn' ? '⚠️ ' : ''}
+            {c.text}
+          </p>
+        ))}
+      </details>
+
+      <div className="wk-mobile-list">
+        <h2 className="wk-list-title">Detalhes do dia</h2>
+
+        {days.map((d) => {
+          const key = dayKey(d);
+          const dayItems = byDay.get(key) ?? [];
+          return (
+            <div key={key} className="card">
+              <strong>
+                {WEEKDAYS[(d.getDay() + 6) % 7]} · {String(d.getDate()).padStart(2, '0')}/
+                {String(d.getMonth() + 1).padStart(2, '0')}
+              </strong>
+              {dayItems.length === 0 && <p className="muted">Nada.</p>}
+              {dayItems.map((item) =>
+                item.kind === 'fact' ? (
+                  <div key={`fact-${item.id}`} className="row" style={{ gap: 8 }}>
+                    <span style={{ color: 'var(--txt-dim)' }}>●</span>
+                    <span>
+                      {item.allDay ? '' : `${item.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · `}
+                      {item.title}
+                    </span>
+                    <span className="muted">({item.source})</span>
                   </div>
-                </div>
-              ),
-            )}
-          </div>
-        );
-      })}
+                ) : (
+                  <div key={`block-${item.id}`} className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ color: 'var(--bat)' }}>●</span>
+                    <div style={{ flex: 1 }}>
+                      <div>
+                        {item.date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · {item.title}{' '}
+                        <span className="muted">({item.status})</span>
+                      </div>
+                      <div className="muted">{item.reason}</div>
+                      {item.status === 'planned' && (
+                        <div className="row" style={{ gap: 4, marginTop: 4 }}>
+                          <form action={markBlockDone}>
+                            <input type="hidden" name="id" value={item.id} />
+                            <button type="submit" className="secondary">feito</button>
+                          </form>
+                          <form action={markBlockSkipped}>
+                            <input type="hidden" name="id" value={item.id} />
+                            <button type="submit" className="secondary">não feito</button>
+                          </form>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }

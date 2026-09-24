@@ -448,8 +448,73 @@ textarea, input[type="text"] {
   margin: 16px 0 8px;
 }
 
+.wk-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.wk-layout > .wk {
+  flex: 3 1 0;
+  min-width: 0;
+}
+
+.wk-layout > .task-panel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 @media (max-width: 899px) {
-  .wk-list-title { display: none; }
+  .wk-layout {
+    flex-direction: column;
+  }
+}
+
+.wk-toggle a,
+.wk-toggle button {
+  font-size: 13px;
+}
+
+.wk-toggle-active {
+  color: var(--bat);
+  font-weight: 500;
+}
+
+.wk-toggle button:disabled {
+  color: var(--txt-faint);
+  cursor: not-allowed;
+}
+
+.wk-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--txt-dim);
+}
+
+.wk-legend-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-left: 3px solid var(--line);
+  border-radius: 2px;
+}
+
+.wk-legend-done {
+  opacity: .55;
+  text-decoration: line-through;
+}
+
+.wk-diagnostics summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--txt-dim);
+  font-weight: 500;
+}
+
+@media (min-width: 900px) {
+  .wk-mobile-list { display: none; }
 }
 
 .sr-only {
